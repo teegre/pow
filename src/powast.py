@@ -406,7 +406,7 @@ class While(Base):
             while istrue(self.condition.eval()):
                 result = self.dothis.eval()
                 if isinstance(result, Exit):
-                   return result.eval()
+                    return result.eval()
         except KeyboardInterrupt:
             print()
             print('*** while: interrupted by user')
@@ -435,6 +435,7 @@ class For(Base):
                 setvar.eval()
                 result = body.eval()
                 if isinstance(result, Exit):
+                    print('if:', result)
                     return result
                 setvar = Set(var, BinOp('+', i, step))
                 i = BinOp('+', i, step)

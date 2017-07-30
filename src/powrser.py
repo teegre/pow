@@ -98,7 +98,7 @@ def p_exit_statement(p):
     """exit_statement : LBRACKET EXIT RBRACKET
                       | LBRACKET EXIT expr RBRACKET"""
     if len(p) == 4: p[0] = powast.Exit(powast.Null())
-    else: p[0] == powast.Exit(p[3])
+    else: p[0] = powast.Exit(p[3])
 
 def p_for_statement(p):
     """for_statement : LBRACKET FOR LBRACKET ID expr expr RBRACKET COLUMN statements RBRACKET

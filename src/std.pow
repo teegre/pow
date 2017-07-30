@@ -15,6 +15,13 @@
 [def mone [n]:
 [- n 1]]
 
+[def tolist [S]:
+;; convert a string to a list
+[set L ()]
+[for [i 0 [mone [len S]]]:
+[push L (S:i)]]
+L]
+
 [def fact [n]:
 [? [or [= n 0] [= n 1]]: 1;
 [* n [fact [- n 1]]]]]
@@ -71,7 +78,8 @@ L]
 L]
 
 [def sort [L]:
-;;return sorted list
+;;sort list (in place)
+[? [isempty L]: L;
 [set m null]
 [set q [mone [len L]]]
 [for [i q 0 -1]:
@@ -80,7 +88,7 @@ L]
 [set m (L:ii)]
 [set (L:ii) (L:[pone ii])]
 [set (L:[pone ii]) m]]]]
-L]
+L]]
 
 [def rndl [L]:
 ;; return randomized list

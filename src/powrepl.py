@@ -39,6 +39,9 @@ def main():
                         print()
                         stop = True
                         break
+                    except EOFError:
+                        print()
+                        continue
             if stop: continue
             else: s += '\n'
         except EOFError:
