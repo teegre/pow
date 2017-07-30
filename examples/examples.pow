@@ -1,0 +1,138 @@
+[def addth [x]:
+[? [< x 10]: x;
+[addth [+ [// x 10] [% x 10]]]]]
+
+[def rfib [n]:
+;; recursive Fibonacci sequence
+;; /!\ very slow with big numbers...
+;; if we consider 20 as a big number...
+;; todo: speed it up!
+[? [or [= n 0] [= n 1]]: 1;
+[+ [rfib [- n 1]] [rfib [- n 2]]]]]
+
+[def typewrite [y x t]:
+[set i 0]
+[while [< i [len t]]:
+[locate [+ y 1] [+ x i]] [echo (t:i)]
+[pause 0.018125]
+[locate y [+ x i]] [echo (t:i)]
+[pause 0.018125]
+[locate [+ y 1] [+ x i]] [echo " "]
+[pause 0.125]
+[++ i]]
+[locate y 1]]
+
+
+[def fib [n]:
+;; Fibonacci sequence with closure
+;; Faster.
+  [def fibii [n]:
+  [? [<= n 1]: 1;
+  [set a [set b 1]]
+  [set i 0]
+  [set r [range 0 [- n 1]]]
+  [while [in i r]:
+  [set c [+ a b]]
+  [set a b]
+  [set b c]
+  [++ i]]
+  c]]
+[set r [range 0 [- n 1]]]
+[set i 0]
+[while [in i r]:
+[set f [fibii i]]
+[++ i]]
+f]
+
+[def E []:
+[set e 2]
+[for [n 2 100]:
+[set e [+ e [/ 1 [fact n]]]]]
+e]
+
+[def lotto []:
+;; return a list of 7 numbers ranging from 1 to 49.
+[set L ()]
+[while [< [len L] 7]:
+[set N [rndr 1 49]]
+[? [not [in N L]]:
+[push L N]]]
+L]
+
+[def dice [sides count]:
+[? [<= count 0]: [echo "dice: invalid number of dice."];
+[? [<= sides 0]: [echo "dice: invalid side number."];
+[set D ()]
+[while [< [len D] count]:
+[push D [rndr 1 sides]]]
+D]]]
+
+[def dnr [dur]:
+;; display digits randomly all over the screen.
+[set a (0 1 2 3 4 5 6 7 8 9)]
+[set start [time]]
+[cls]
+[hidecursor]
+[set h [scrh]] [set w [scrw]]
+[while true:
+[lecho [rndr 1 h] [rndr 1 w] (a:[rndr 0 9])]
+[? [> [rnd] 0.5]: [lecho [rndr 1 h] [rndr 1 w] " "]]
+[pause 0.0078125]
+[? [> [- [time] start] dur]: [exit]]]
+[cls]
+[echo [// [- [time] start] 1] " sec.\n"]
+[echo "time out."]
+[showcursor]]
+
+[def patterns []:
+[cls]
+[hidecursor]
+[set a ('/' '|' '\\' '.' ' ')]
+[set sec [time]]
+[while true:
+[lecho [rndr 1 [scrh]] [rndr 1 [scrw]] (a:[rndr 0 5])]
+[lecho [scrh] 1 [// [- [time] sec] 1]]
+[pause 0.0078125]]
+[cls]
+[showcursor]]
+
+[def love []:
+[cls]
+[hidecursor]
+[set a ('I' ' ' 'L' 'O' 'V' 'E' ' ' 'Y' 'O' 'U' 'I LOVE YOU <3')]
+[set sec [time]]
+[while true:
+[lecho [rndr 1 [scrh]] [rndr 1 [scrw]] (a:[rndr 0 11])]
+[lecho [scrh] 1 [// [- [time] sec] 1]]
+[pause 0.0078125]]
+[cls]
+[showcursor]]
+
+[def turn []:
+[set a ("/" "-" "\\" "|")]
+[set i 0]
+[set cursor [getcur]]
+[set y (cursor:0)]
+[hidecursor]
+[while true:
+[? [> i [mone [len a]]]: [set i 0]]
+[locate y 1] [echo (a:i) " now loading."]
+[pause 0.125]
+[++ i]]
+[showcursor]]
+
+[def base [n b]:
+;; convert n into base b
+[? [or [< b 2] [> b 36]]: [echo "** invalid base (2-36)"];
+[? [= n 0]: "0";
+[set digits (
+"0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
+"A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
+"K" "L" "M" "N" "O" "P" "Q" "R" "S" "T"
+"U" "V" "W" "X" "Y" "Z"
+)]
+[set result ""]
+[while [> n 0]:
+[set result [+ (digits:[% n b]) result]]
+[set n [// n b]]]
+result]]]

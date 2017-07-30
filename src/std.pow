@@ -1,0 +1,148 @@
+;; [PowerText] Standard Library
+
+[def isnull [a]:
+[= a null]]
+
+[def iszero [a]:
+[= a 0]]
+
+[def isempty [a]:
+[or [= a ""] [= a ()]]]
+
+[def pone [n]:
+[+ n 1]]
+
+[def mone [n]:
+[- n 1]]
+
+[def fact [n]:
+[? [or [= n 0] [= n 1]]: 1;
+[* n [fact [- n 1]]]]]
+
+[def sum [L]:
+[? [isnull L]: 0;
+[? [= L [last L]]:
+[? [isnull [head L]]: 0; [head L]];
+[+ [head L] [sum [tail L]]]]]]
+
+[def in [a b]:
+[? [= b null]: false;
+[? [= a [head b]]: true;
+[in a [tail b]]]]]
+
+[def slice [a s e]:
+[? [or [> s e] [or [< s 0] [> e [len a]]]]:
+[echo "** invalid parameters."]
+null;
+[set n ()]
+[set i s]
+[while [<= i e]:
+[push n (a:i)]
+[++ i]]
+n]]
+
+[def abs [x]:
+[? [>= x 0]: x; -x]]
+
+[def range [a b]:
+;; return a list of numbers
+;; ranging from a to b
+[set L ()]
+[? [< a b]:
+  [while [<= a b]:
+  [push L a]
+  [++ a]];
+[while [>= a b]:
+[push L a]
+[-- a]]]
+L]
+
+[def steprange [a b c]:
+;; return a list of numbers
+;; ranging from a, a+c to b
+[set L ()]
+[? [< a b]:
+  [while [<= a b]:
+  [push L a]
+  [set a [+ a [abs c]]]];
+[while [>= a b]:
+[push L a]
+[set a [- a [abs c]]]]]
+L]
+
+[def sort [L]:
+;;return sorted list
+[set m null]
+[set q [mone [len L]]]
+[for [i q 0 -1]:
+[for [ii 0 i]:
+[? [> (L:ii) (L:[pone ii])]:
+[set m (L:ii)]
+[set (L:ii) (L:[pone ii])]
+[set (L:[pone ii]) m]]]]
+L]
+
+[def rndl [L]:
+;; return randomized list
+[set m [set n null]]
+[set new ()]
+[set q [len L]]
+[while [!= [len new] q]:
+[? [not [in [set n (L:[rndr 0 q])] new]]: [push new n]]]
+new]
+
+[def max [L]:
+[? [= [len L] 1]: [head L];
+[set m1 [max [tail L]]]
+[set m2 [head L]]
+[? [> m1 m2]: m1; m2]]]
+
+[def min [L]:
+[? [= [len L] 1]: [head L];
+[set m1 [min [tail L]]]
+[set m2 [head L]]
+[? [< m1 m2]: m1; m2]]]
+
+[def rndr [a b]:
+;; return an integer between a and b if a < b,
+;; between b and a otherwise.
+[set lo [? [< a b]: a; b]]
+[set hi [? [> a b]: a; b]] 
+[// [+ [* [rnd] hi] lo] 1]]
+
+[def cls []:
+[echo "\x1b[2J\x1b[H"]]
+
+[def locate [y x]:
+[echo "\x1b[" y ";" x "H"]]
+
+[def lecho [y x text]:
+[locate y x]
+[echo text]]
+
+[def clrline [y x]:
+[locate y x]
+[echo "\x1b[K"]]
+
+[def hidecursor []:
+[echo "\x1b[?25l"]]
+
+[def showcursor []:
+[echo "\x1b[?25h"]]
+
+[def scrh []:
+[set s [scrsize]]
+(s:0)]
+
+[def scrw []:
+[set s [scrsize]]
+(s:1)]
+
+[def cury []:
+[set yx [getcur]]
+(yx:0)]
+
+[def curx []:
+[set yx [getcur]]
+(yx:1)]
+

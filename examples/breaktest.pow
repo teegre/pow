@@ -1,0 +1,8 @@
+[def breaktest []:
+[set i 0][set L ()]
+[set C [while true:
+[? [= i 10]:
+[exit L];
+[push L [+ i 1]]
+[++ i]]]]
+C]

@@ -1,0 +1,8 @@
+[use utils][use examples]
+[set a [push list 1 2 3 4 5 6 7 8 9]]
+[set length [- [len a] 1]]
+[cls]
+[while length:
+[lecho [rndr 1 3] [rndr 1 3] [get a [rndr 0 length]]]
+[lecho [rndr 1 3] [rndr 1 3] " "]]]
+[pause 0.00125]]
