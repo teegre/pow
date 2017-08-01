@@ -3,22 +3,24 @@
 [PowerText] is a LISP-like functionnal programming language written in Python 3.6. My first intention was to write a scripting language to create simple text 
 animations in a terminal. Basically the language needed to have functions to move the cursor on the screen and to print some text. Even though the focus is on lists, strings, and functions, [PowerText] has the basic features of any programming language and can be used for other purposes (I guess...). It also can be extended if needed.
 
-#1. SYNTAX
+# 1. SYNTAX
 
 Similar to LISP, but parentheses have been replaced by square brackets. So for adding 2 and 2, just type: [+ 2 2]  which should return 4.
 
 ## 1.1 Types
 
 There are five different types in [PowerText]:
+
 - string: "Abc" or 'Abc'
 - number: 123, 123.456 (integer or float)
 - list: (1 2 3)
-- boolean: true or false
+- boolean: true, false
 - null
 
 ## 1.2 Variable assignment
 
 Function «set».
+
   [set b "Hello, World!"]
 
 Note that every function returns a value so it is possible to nest functions inside functions.
@@ -40,15 +42,20 @@ In [PowerText], "?" is equivalent to if, and its syntax is as follow:
 
   [? [condition]: [dothis]; [dothat]]
 
-So "?" is if, ":" is then and ";" is else (optional). Note that [dothis] can be one or more statements:
+Note that [dothis] can be one or more statements:
 
   [? [condition]:
   [dothis]
   [andthis]
   [andalsothis]]
 
-While loop syntax is quite the same:
+For loop:
+
+  [for [variable start end]: [dothis]]
+  [for [variable start end step]: [dothis]]
+
+While loop:
 
   [while [condition]: [dothis]]
 
-< More to come... >
+## 1.4
