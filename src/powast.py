@@ -16,7 +16,6 @@ symbols = Symbols()
 
 isvariable = symbols.is_variable
 isfunction = symbols.is_function
-TRACE = False
 
 class StatementList:
     def __init__(self, children=None):
@@ -93,7 +92,7 @@ class Set(Base):
     def __repr__(self):
         return f'[set: {self.name}<-{self.value}]'
     def __iter__(self):
-        return iter(self.value)
+        return iter(self.value.eval())
     def eval(self):
         value = self.value
         if self.index is None:
@@ -121,6 +120,8 @@ class MakeList(Base):
         self.items = items
     def __repr__(self):
         return f'[makelist: {tuple(self.items)}]'
+    def powtype(self):
+        return 'list'
     def eval(self):
         new_list = List()
         for item in self.items:
@@ -139,8 +140,8 @@ class Push(Base):
             for value in self.value:
                 _list.push(value.eval())
             return _list
-        except AttributeError as e:
-            print('*** push: list expected.', e)
+        except AttributeError:
+            raise PowTypeError('*** push: list expected, got {self.list.powtype()}')
             return _list
         except Exception as e: raise PowRuntimeError(e)
 
@@ -150,7 +151,9 @@ class Head(Base):
     def __repr__(self):
         return f'[head: {self.list}]'
     def eval(self):
-        return self.list.eval().head()
+        try: return self.list.eval().head()
+        except AttributeError:
+            raise PowTypeError(f'*** head: list expected, got {self.list.powtype()}')
 
 class Tail(Base):
     def __init__(self, _list):
@@ -158,7 +161,9 @@ class Tail(Base):
     def __repr__(self):
         return f'[tail: {self.list}]'
     def eval(self):
-        return self.list.eval().tail()
+        try: return self.list.eval().tail()
+        except AttributeError:
+            raise PowTypeError(f'*** tail: list expected, got {self.list.powtype()}')
 
 class Last(Base):
     def __init__(self, _list):
@@ -166,7 +171,9 @@ class Last(Base):
     def __repr__(self):
         return f'[tail: {self.list}]'
     def eval(self):
-        return self.list.eval().last()
+        try: return self.list.eval().last()
+        except AttributeError:
+            raise PowTypeError(f'*** last: list expected, got {self.list.powtype()}')
 
 class Len(Base):
     def __init__(self, item):
@@ -174,12 +181,14 @@ class Len(Base):
     def __repr__(self):
         return f'[len: {self.item}]'
     def eval(self):
-        return len(self.item.eval())
+        try: return len(self.item.eval())
+        except TypeError:
+            raise PowTypeError(f'*** len: {self.item.powtype()} has no length')
 
 def filter_list(expr, _list):
     if isnull(_list): return _list
     filtered = filter_list(expr, _list.tail())
-    if istrue(expr.eval([ttype(_list.head())])):
+    if expr.eval([ttype(_list.head())]):
         return List(_list.head(), filtered)
     else:
         return filtered
@@ -213,12 +222,23 @@ class Map(Base):
             raise PowTypeError(f'*** map: list expected, got {ttype(_list).powtype()}')
         return map_list(self.expr, _list)
 
+class Type(Base):
+    def __init__(self, item):
+        self.item = item
+    def __repr__(self):
+        return f'[type: {self.item}]'
+    def eval(self):
+        if isinstance(self.item, Variable):
+            return self.item.eval().powtype()
+        else: return self.item.powtype()
+
 class BinOp(Base):
     __op = {
             '+'   : operator.add,
             '-'   : operator.sub,
             '*'   : operator.mul,
             '/'   : operator.truediv,
+            '//'  : operator.floordiv,
             '%'   : operator.mod,
             '='   : operator.eq,
             '!='  : operator.ne,
@@ -227,7 +247,6 @@ class BinOp(Base):
             '<'   : operator.lt,
             '<='  : operator.le,
             '***' : operator.pow,
-            '//'  : lambda a, b: int(a.eval() // b.eval()),
     }
     def __init__(self, op, a, b):
         self.a  = a
@@ -237,15 +256,13 @@ class BinOp(Base):
         return f'[{self.op}: {self.a} {self.b}]'
     def eval(self):
         try:
-            a, b = self.a, self.b
+            a = self.a
+            b = self.b
             op = self.__op[self.op]
-            if isinstance(op, LambdaType):
-                return op(a, b)
-            else:
-                if self.op in '+-****/\%': return op(a.eval(), b.eval())
-                else: return Bool(op(a.eval(), b.eval()))
+            if self.op == '//': return int(op(a.eval(), b.eval()))
+            return op(a.eval(), b.eval())
         except TypeError:
-            raise PowTypeError(f'*** {self.op} < {a.eval()} > < {b.eval()} >: unable to perform operation.')
+            raise PowTypeError(f'*** {self.op} < {a} > < {b} >: unable to perform operation.')
             return Null()
         #except Exception as e: raise PowRuntimeError(e)
     @property
@@ -269,9 +286,9 @@ class Or(Base):
     def eval(self):
         a = self.a.eval()
         b = self.b.eval()
-        if isinstance(a, Bool): a = a.eval().value
-        if isinstance(b, Bool): b = b.eval().value
-        return Bool(a or b)
+        if isinstance(a, Bool): a = a.eval()
+        if isinstance(b, Bool): b = b.eval()
+        return a or b
 
 class And(Base):
     def __init__(self, a, b):
@@ -282,9 +299,9 @@ class And(Base):
     def eval(self):
         a = self.a.eval()
         b = self.b.eval()
-        if isinstance(a, Bool): a = a.eval().value
-        if isinstance(b, Bool): b = b.eval().value
-        return Bool(a and b)
+        if isinstance(a, Bool): a = a.eval()
+        if isinstance(b, Bool): b = b.eval()
+        return a and b
 
 class XOr(Base):
     def __init__(self, a, b):
@@ -295,9 +312,9 @@ class XOr(Base):
     def eval(self):
         a = self.a.eval()
         b = self.b.eval()
-        if isinstance(a, Bool): a = a.eval().value
-        if isinstance(b, Bool): b = b.eval().value
-        return Bool(operator.xor(a, b))
+        if isinstance(a, Bool): a = a.eval()
+        if isinstance(b, Bool): b = b.eval()
+        return operator.xor(a, b)
 
 class Not(Base):
     def __init__(self, a):
@@ -306,8 +323,8 @@ class Not(Base):
         return f'[not: {self.a}]'
     def eval(self):
         a = self.a.eval()
-        if isinstance(a, Bool): a = a.eval().value
-        return Bool(not a)
+        if isinstance(a, Bool): a = a.eval()
+        return not a
 
 class Negative(Base):
     def __init__(self, value):
@@ -316,7 +333,9 @@ class Negative(Base):
         return f'-{self.value}'
     def eval(self):
         try:
-            return -self.value.eval()
+            if isinstance(self.value, Variable): value = self.value.eval()
+            else: value = self.value
+            return -value.eval()
         except TypeError:
             raise PowTypeError(f'*** -{self.value}: number expected, got {self.value.powtype}')
         except Exception as e: raise PowRuntimeError(e)
@@ -370,7 +389,7 @@ class If(Base):
         else:
             return f'[?: [{self.condition}]: {self.dothis}]'
     def eval(self):
-        if istrue(self.condition.eval()):
+        if self.condition.eval():
             result = self.dothis.eval()
             if isinstance(result, Exit):
                 return result
@@ -403,13 +422,13 @@ class While(Base):
         return f'[while: condition [{self.condition}]: body={self.dothis}]'
     def eval(self):
         try:
-            while istrue(self.condition.eval()):
+            while self.condition.eval():
                 result = self.dothis.eval()
                 if isinstance(result, Exit):
                     return result.eval()
         except KeyboardInterrupt:
             print()
-            print('*** while: interrupted by user')
+            raise PowInterrupt('*** while: interrupted by user')
 
 class For(Base):
     def __init__(self, var, a, b, step, dothis):
@@ -431,7 +450,7 @@ class For(Base):
             i = a
             if a.eval() > b.eval(): op = '>='
             else: op = '<='
-            while istrue(BinOp(op, i, b).eval()):
+            while BinOp(op, i, b).eval():
                 setvar.eval()
                 result = body.eval()
                 if isinstance(result, Exit):
@@ -441,7 +460,7 @@ class For(Base):
                 i = BinOp('+', i, step)
         except KeyboardInterrupt:
             print()
-            print('*** for: interrupted by user')
+            raise PowInterrupt('*** for: interrupted by user')
 
 class Def(Base):
     def __init__(self, name, params, body):
@@ -462,7 +481,7 @@ class FunctionCall(Base):
         return f'[function call: [{self.name} {self.params}]]'
     def eval(self):
         func = symbols.get_function(self.name)
-        if func is None: return Null()
+        if func is None: return Null() # ?
         params = func[0]
         if len(params) != len(self.params):
             raise InvalidParamCount(f'*** {self.name}: invalid number of parameters.\n*** expected {len(params)}, got {len(self.params)}')
@@ -471,19 +490,12 @@ class FunctionCall(Base):
         body = func[1]
         symbols.set_local()
         symbols.set_localfunction()
-        if TRACE:
-            print('function:', self.name, self.params)
-            print('         ', params)
         for index, param in enumerate(params):
             result = symbols.set_variable(param, sparams[index])
-            if TRACE:
-                print('source:', type(sparams[index]), sparams[index])
-                print('dest  :', param)
         try:
             result = body.eval()
             try: result = result.eval()
             except: pass
-            if TRACE: print('\tstatement:', body, '\n', '\tresult:', result)
             return result[-1]
         except PowException as e : print(e)
         finally: symbols.del_local()
@@ -496,7 +508,6 @@ class LambdaCall(Base):
         return f'[lambda call: {self.f} {self.params}]'
     def eval(self, params=None):
         if params is not None: self.params = params
-        if TRACE: print(self)
         f = self.f.eval()
         sparams = [param.eval() for param in self.params]
         if not islambda(f):
@@ -507,11 +518,14 @@ class LambdaCall(Base):
         symbols.set_localfunction()
         for index, param in enumerate(f.params):
             symbols.set_variable(param, sparams[index])
-        result = f.body.eval()
-        try: result = result.eval()
-        except: pass
-        symbols.del_local()
-        return result
+        try:
+            result = f.body.eval()
+            try: result = result.eval()
+            except: pass
+            symbols.del_local()
+            return result
+        except KeyboardInterrupt:
+            raise PowInterrupt('*** lambda: interrupted by user')
 
 #class StandardFunction(Base):
 #    def  __init__(self, func):
@@ -527,7 +541,6 @@ class Uses(Base):
     def __repr__(self):
         return f'[use: {self.module}]'
     def eval(self):
-        if TRACE: print(self)
         module = self.module + '.pow'
         if isfile(module):
             with open(module, 'r') as f:
@@ -535,8 +548,7 @@ class Uses(Base):
             instructions = self.parser.parse(lines)
             instructions.eval()
         else:
-            print(f'*** use: module {self.module} not found.')
-            return Null()
+            raise PowModuleNotFound(f'*** uses: module {self.module} not found.')
 
 class ScreenSize(Base):
     def __repr__(self):

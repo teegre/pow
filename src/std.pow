@@ -22,6 +22,25 @@
 [push L (S:i)]]
 L]
 
+[def tostr [L]:
+;; convert a list to a string
+[set S ""]
+[for [i 0 [mone [len L]]]:
+[set S [+ S (L:i)]]]
+S]
+
+[def index [L item]:
+;; get the index of an item in a list
+[? [or [isnull L] [isnull item]]: null;
+[set idx 0]
+[set l L]
+[while [!= l null]:
+[? [!= [head l] item]:
+[++ idx]
+[set l [tail l]];
+[exit]]]]
+[? [isnull l]: null; idx]]
+
 [def fact [n]:
 [? [or [= n 0] [= n 1]]: 1;
 [* n [fact [- n 1]]]]]
@@ -98,6 +117,16 @@ L]]
 [while [!= [len new] q]:
 [? [not [in [set n (L:[rndr 0 q])] new]]: [push new n]]]
 new]
+
+[def reverse [L]:
+[? [isnull L]: null;
+[set i 0]
+[set j [mone [len L]]]
+[while [< i j]:
+[set a (L:i)] [set b (L:j)]
+[set (L:j) a] [set (L:i) b]
+[++ i] [-- j]]
+L]]
 
 [def max [L]:
 [? [= [len L] 1]: [head L];

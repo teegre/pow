@@ -50,6 +50,7 @@ def p_expr(p):
             | NUMBER
             | BOOL
             | NULL
+            | pow_type
             | variable
             | list_expr
             | lambda_expr
@@ -61,6 +62,13 @@ def p_expr(p):
         p[0] = powast.ttype(p[2])
     else:
         p[0] = powast.ttype(p[1])
+
+def p_pow_type(p):
+    """pow_type : TYPE_BOOL
+                | TYPE_NUM
+                | TYPE_STR
+                | TYPE_LIST"""
+    p[0] = powast.String(p[1])
 
 def p_variable(p):
     """variable : ID
@@ -171,6 +179,9 @@ def p_command_listcmd(p):
     elif  p[1] == 'filter': p[0] = powast.Filter(p[2], p[3])
     else: p[0] = powast.Len(p[2])
 
+def p_command_type(p):
+    """command : TYPE expr"""
+    p[0] = powast.Type(p[2])
 
 def p_command_set(p):
     """command : SET ID expr

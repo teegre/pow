@@ -9,10 +9,11 @@ endif
 
 syn case match
 
-" =======================================================================
+" ==============================================================================
 
-syn keyword powFunc and close del def echo getcur head input lambda last
-syn keyword powFunc not open or pause push read rnd scrsize set tail time uses write xor
+syn keyword powFunc and close del def echo filter getcur head input lambda last
+syn keyword powFunc map not open or pause push read rnd scrsize set tail time
+syn keyword powFunc type uses write xor
 syn match   powOp   "\v\+"
 syn match   powOp   "++"
 syn match   powOp   "\v-"

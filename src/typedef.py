@@ -3,105 +3,50 @@
 from time import sleep
 
 class Base:
+    __type = 'function'
     def eval(self):
         raise NotImplementedError
+    def powtype(self):
+        return self.__type
 
 class Number(Base):
     def __init__(self, value):
-        self.value = value
-    def __len__(self):
-        return len(str(self.value))
+        self.__type = 'number'
+        self.__value = value
     def __repr__(self):
-        return f'{self.value}'
-    def powtype(self):
-        return 'number'
-    def tostr(self):
-        return str(self.value)
+        return str(self.__value)
+    def __str__(self):
+        return str(self.__value)
     def eval(self):
-        return self.value
+        return self.__value
 
 class String(Base):
+    __type = 'string'
     def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
+        self.__value = value
     def __repr__(self):
        return f'"{self.value}"'
-    def __add__(self, other):
-        try: return self.value + other.value
-        except: return self.value + other
-    def __len__(self):
-        return len(self.value)
-    def __iter__(self):
-        return iter(self.value)
-    def __getitem__(self, index):
-        return self.value[index]
-    def __setitem__(self, index, value):
-        l = [c for c in self.value]
-        l[index] = value
-        self.value = ''.join(l)
-        return value
-    def powtype(self):
-        return 'string'
-    def tonum(self):
-        try: num = int(self.value)
-        except:
-            try: num = float(self.value)
-            except:
-                print(f'*** unable to convert "{self.value}" to a number.')
-                #return self.value
-        return Number(num)
+    def __str__(self):
+        return self.__value
     def eval(self):
-        return self
+        return self.__value
 
 class Bool(Base):
+    __type = 'bool'
     def __init__(self, value):
-        if value != 0: self.value = TRUE()
-        else: self.value = FALSE()
-    def __str__(self):
-        return str(self.value)
+        if value != 0: self.__value = True
+        else: self.__value = False
     def __repr__(self):
-        return 'bool: ' + repr(self.value)
-    def __eq__(self, other):
-        return self.value == other
-    def __ne__(self, other):
-        return self.value != other
-    def __gt__(self, other):
-        return self.value > other
-    def __ge__(self, other):
-        return self.value >= other
-    def __lt__(self, other):
-        return self.value < other
-    def __le__(self, other):
-        return self.value <= other
-    def powtype(self):
-        return 'bool'
-    def eval(self):
-        return self.value.eval()
-
-class TRUE(Bool):
-    def __init__(self):
-        self.value = 1
-    def __repr__(self):
-        return 'true'
+        return 'bool: ' + str(self.__value).lower()
     def __str__(self):
-        return 'true'
+        return str(self.__value).lower()
     def eval(self):
-        return self
-
-class FALSE(Bool):
-    def __init__(self):
-        self.value = 0
-    def __repr__(self):
-        return 'false'
-    def __str__(self):
-        return 'false'
-    def eval(self):
-        return self
+        return self.__value
 
 class Null(Base):
+    __type = 'null'
     def __init__(self):
-        self.value = '\0'
+        self.__value = '\0'
     def __getitem__(self, index):
         return self
     def __setitem__(self, index, value):
@@ -109,25 +54,23 @@ class Null(Base):
     def __repr__(self):
         return 'null'
     def __str__(self):
-        return '\0'
+        return self.__value
     def __len__(self):
         return 0
     def __eq__(self, other):
-        return Bool(isinstance(other, Null))
+        return isinstance(other, Null)
     def __ne__(self, other):
-        return Bool(not isinstance(other, Null))
+        return not isinstance(other, Null)
     def __gt__(self, other):
-        return Bool(0)
+        return False
     def __ge__(self, other):
-        if isinstance(other, Null): return Bool(1)
-        else: return Bool(0)
+        if isinstance(other, Null): return True
+        else: return False
     def __lt__(self, other):
-        return Bool(0)
+        return False
     def __le__(self, other):
-        if isinstance(other, Null): return Bool(1)
-        else: return Bool(0)
-    def powtype(self):
-        return 'null'
+        if isinstance(other, Null): return True
+        else: return False
     def eval(self):
         return self
 
@@ -135,7 +78,7 @@ def listrepr(s):
     tail = ''
     if not isnull(s.tail()):
         tail = ', ' + listrepr(s.tail())
-    return f'{s.head()}{tail}'
+    return f'{repr(s.head())}{tail}'
 
 def addlist(s, t):
     if isnull(s): return t
@@ -144,6 +87,7 @@ def addlist(s, t):
 
 class List(Base):
     """List type from scratch"""
+    __type = 'list'
     def __init__(self, head=Null(), tail=Null()):
         assert isnull(tail) or isinstance(tail, List)
         self.__head = head
@@ -165,13 +109,13 @@ class List(Base):
     def __add__(self, other):
         return addlist(self, other)
     def __eq__(self, other):
-        if not isinstance(other, List): return Bool(0)
-        return Bool(self.__head == other.__head and self.__tail == other.__tail)
+        if not isinstance(other, List): return False
+        return self.__head == other.__head and self.__tail == other.__tail
     def __ne__(self, other):
-        if not isinstance(other, List): return Bool(1)
-        return Bool(self.__head != other.__head and self.__tail != other.__tail)
+        if not isinstance(other, List): return True
+        return self.__head != other.__head and self.__tail != other.__tail
     def powtype(self):
-        return 'list'
+        return String('list')
     def head(self):
         """first element of the list"""
         return self.__head
@@ -203,28 +147,12 @@ class List(Base):
     def eval(self):
         return self
 
-#def strrepr(s):
-#    tail = ''
-#    if not isnull(s.tail()):
-#        tail = listrepr(s.tail())
-#    return f'{s.head()}{tail}'
-#
-#class String(List):
-#    def powtype(self):
-#        return 'string'
-#    def __repr__(self):
-#        return f'"{strrepr(self)}"'
-#    def __str__(self):
-#        return f'{strrepr(self)}'
-#    def eval(self):
-#        return self
-
 class Lambda(Base):
     def __init__(self, params, body):
         self.params = params
         self.body = body
     def powtype(self):
-        return 'lambda'
+        return String('lambda')
     def __repr__(self):
         return f'[lambda: {self.params}: {self.body}]'
     def eval(self):
@@ -232,14 +160,6 @@ class Lambda(Base):
 
 def isnull(value):
     return isinstance(value, Null)
-
-def istrue(value):
-    value = Bool(value)
-    return isinstance(value.value, TRUE)
-
-def isfalse(value):
-    value = Bool(value)
-    return isinstance(value.value, FALSE)
 
 def islambda(value):
     return isinstance(value.eval(), Lambda)

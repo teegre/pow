@@ -22,6 +22,10 @@
 [++ i]]
 [locate y 1]]
 
+[def simple [y x t]:
+[for [i 0 [mone [len t]]]:
+[locate y [+ x i]] [echo (t:i)]
+[pause 0.018125]]]
 
 [def fib [n]:
 ;; Fibonacci sequence with closure
@@ -136,3 +140,20 @@ D]]]
 [set result [+ (digits:[% n b]) result]]
 [set n [// n b]]]
 result]]]
+
+[def flowers []:
+  [def flower [y x]:
+  [locate y x] [echo "( )"]
+  [set L ("\\" "|" "/")]
+  [for [i 0 2]: [locate [- y 1] [+ x i]] [echo (L:i)] [pause 0.018125]]
+  [reverse L]
+  [for [i 2 0 -1]: [locate [+ y 1] [+ x i]] [echo (L:i)] [pause 0.018125]]
+  null]
+[hidecursor]
+[cls]
+[while true:
+[set y [rndr 1 [scrh]]]
+[set x [rndr 1 [scrw]]]
+[flower y x]
+[pause [rnd]]]
+[showcursor]]

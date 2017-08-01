@@ -22,11 +22,6 @@ def main():
                 tb = not tb
                 print('traceback:', powast.Bool(tb))
                 continue
-            elif s == 'trace':
-                trace = not trace
-                powast.TRACE = trace
-                print('trace:', powast.Bool(trace))
-                continue
             elif not s:
                 continue
             if s.endswith(':'):
@@ -58,7 +53,7 @@ def main():
                 result = instructions.eval()
                 if result is not None and not isinstance(result, powast.Exit):
                     for r in result:
-                        if r is not None: print(r)
+                        if r is not None: print(powast.ttype(r))
             elif instructions is not None:
                 for instruction in instructions:
                     print(instruction)
@@ -66,7 +61,6 @@ def main():
             print(e)
             if tb: traceback.print_exc()
             parser.restart()
-    print('bye!')
     return 1
 
 if __name__ == '__main__':
@@ -81,3 +75,4 @@ if __name__ == '__main__':
     print('██[PowerText] version 0.0.2  ---  (07-2017)'); sleep(0.0625)
     print('REPL: hello?')
     main()
+    print('REPL: bye?')

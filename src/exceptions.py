@@ -12,9 +12,13 @@ class UndefinedFunction(PowException):
     pass
 class InvalidParamCount(PowException):
     pass
+class PowModuleNotFound(PowException):
+    pass
 class PowSyntaxError(PowException):
     pass
 class PowTypeError(PowException):
+    pass
+class PowInterrupt(PowException):
     pass
 class IllegalCharacter(PowException):
     pass
