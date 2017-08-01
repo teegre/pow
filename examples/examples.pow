@@ -100,18 +100,6 @@ D]]]
 [cls]
 [showcursor]]
 
-[def love []:
-[cls]
-[hidecursor]
-[set a ('I' ' ' 'L' 'O' 'V' 'E' ' ' 'Y' 'O' 'U' 'I LOVE YOU <3')]
-[set sec [time]]
-[while true:
-[lecho [rndr 1 [scrh]] [rndr 1 [scrw]] (a:[rndr 0 11])]
-[lecho [scrh] 1 [// [- [time] sec] 1]]
-[pause 0.0078125]]
-[cls]
-[showcursor]]
-
 [def turn []:
 [set a ("/" "-" "\\" "|")]
 [set i 0]
@@ -127,7 +115,7 @@ D]]]
 
 [def base [n b]:
 ;; convert n into base b
-[? [or [< b 2] [> b 36]]: [echo "** invalid base (2-36)"];
+[? [or [< b 2] [> b 36]]: [echo "*** invalid base (2-36)"];
 [? [= n 0]: "0";
 [set digits (
 "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"

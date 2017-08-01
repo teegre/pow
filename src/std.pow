@@ -51,6 +51,11 @@ S]
 [? [isnull [head L]]: 0; [head L]];
 [+ [head L] [sum [tail L]]]]]]
 
+[def count [item L]:
+[? L:
+[+ [= item [head L]] [count item [tail L]]];
+0]]
+
 [def in [a b]:
 [? [= b null]: false;
 [? [= a [head b]]: true;

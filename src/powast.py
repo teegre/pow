@@ -207,7 +207,6 @@ class Filter(Base):
 
 def map_list(expr, _list):
     if isnull(_list): return _list
-    if _list.isempty(): return _list
     return List(expr.eval([ttype(_list.head())]), map_list(expr, _list.tail()))
 
 class Map(Base):
@@ -229,8 +228,8 @@ class Type(Base):
         return f'[type: {self.item}]'
     def eval(self):
         if isinstance(self.item, Variable):
-            return self.item.eval().powtype()
-        else: return self.item.powtype()
+            return type(self.item.eval())
+        else: return type(self.item)
 
 class BinOp(Base):
     __op = {
@@ -438,7 +437,7 @@ class For(Base):
         self.step = step
         self.dothis = dothis
     def __repr__(self):
-        return('[for: [{self.var} {self.a} {self.b} {self.step}]]')
+        return(f'[for: [{self.var} {self.a} {self.b} {self.step}]: {self.dothis}]')
     def eval(self):
         try:
             a = self.a
@@ -526,13 +525,6 @@ class LambdaCall(Base):
             return result
         except KeyboardInterrupt:
             raise PowInterrupt('*** lambda: interrupted by user')
-
-#class StandardFunction(Base):
-#    def  __init__(self, func):
-#        self.func = func
-#    def __repr__(self):
-#        return f'[standard function: {self.func}]'
-#    def eval(self):
 
 class Uses(Base):
     def __init__(self, module, parser):

@@ -111,8 +111,7 @@ def t_STRING(t):
     # issue with escaped double quote in double-quoted strings.
     # workaround: enabling single-quoted strings...
     r'\".*?\"|\'.*?\''
-    t.value = bytes(t.value[1:-1], 'utf-8').decode('unicode_escape')
-    #issue with accentuated characters, not rendered properly (à => À©)
+    t.value = bytes(t.value[1:-1], 'latin-1').decode('unicode-escape')
     return t
 
 def t_COMMENT(t):

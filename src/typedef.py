@@ -3,15 +3,14 @@
 from time import sleep
 
 class Base:
-    __type = 'function'
     def eval(self):
         raise NotImplementedError
     def powtype(self):
         return self.__type
 
 class Number(Base):
+    __type = 'number'
     def __init__(self, value):
-        self.__type = 'number'
         self.__value = value
     def __repr__(self):
         return str(self.__value)
@@ -137,7 +136,7 @@ class List(Base):
             last_list.__tail = List(item)
         return self
     def isempty(self):
-        if isnull(self.head()): return True
+        if isnull(self.__head): return True
         else: return False
     def copy(self):
         new_list = List()
@@ -148,11 +147,10 @@ class List(Base):
         return self
 
 class Lambda(Base):
+    __type ='lambda'
     def __init__(self, params, body):
         self.params = params
         self.body = body
-    def powtype(self):
-        return String('lambda')
     def __repr__(self):
         return f'[lambda: {self.params}: {self.body}]'
     def eval(self):
