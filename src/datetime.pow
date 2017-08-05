@@ -6,7 +6,7 @@
 [set _MONTHS_ ("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")]
 
 [def leapyear [y]:
-[? [and [not [% y 4]] [or [% y 100] [not [% y 400]]]]: true; false]]
+[?? [and [not [% y 4]] [or [% y 100] [not [% y 400]]]]]]
 
 [def timedate [T]:
 [set daysSinceJan1st (
@@ -53,7 +53,7 @@
 )]
 
 [def now []:
-[set T [timedate [time]]
+[set T [timedate [time]]]
 [ltostr
   ( 
   (_FULLDAYS_:[- ((T:1):1) 1])
