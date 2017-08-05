@@ -1,0 +1,73 @@
+;; Date Time Library
+
+[set _FULLDAYS_ ("Monday" "Tuesday" "Wednesday" "Thursday" "Friday" "Saturday" "Sunday")]
+[set _DAYS_ ("Mon" "Tue" "Wed" "Thu" "Fri" "Sat" "Sun")]
+[set _FULLMONTHS_ ("January" "February" "March" "April" "May" "June" "July" "August" "September" "October" "November" "December")]
+[set _MONTHS_ ("Jan" "Feb" "Mar" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec")]
+
+[def leapyear [y]:
+[? [and [not [% y 4]] [or [% y 100] [not [% y 400]]]]: true; false]]
+
+[def timedate [T]:
+[set daysSinceJan1st (
+  (0 31 59 90 120 151 181 212 243 273 304 334 365)
+  (0 31 60 91 121 152 182 213 244 274 305 335 366)
+)]
+[set sec T] 
+[set wday [// [+ [% [/ [+ sec 1164473600] 86400] 7] 1] 1]]
+[set qct [// [/ sec 12622815360] 1]]
+[set sec [% sec 12622815360]]
+[set ct [// [/ sec 3155673600] 1]]
+[? [> ct 3]: [set ct 3]]
+[set sec [- sec [* ct 3155673600]]]
+[set qd [// [/ sec 126230400] 1]]
+[? [> qd 24]: [set qd 24]]
+[set sec [- sec [* qd 126230400]]]
+[set an [// [/ sec 31536000] 1]]
+[? [> an 3]: [set an 3]]
+[set sec [- sec [* an 31536000]]]
+[set year [+ 1970 [+ [* qct 400] [+ [* ct 100] [+ [* qd 4] an]]]]]
+[set leap [leapyear year]]
+[set yday [// sec 86400]]
+[set sec [% sec 86400]]
+[set hour [// sec 3600]]
+[set sec [% sec 3600]]
+[set min [// sec 60]]
+[set sec [% sec 60]]
+[set mday 0]
+[for [m 1 12]:
+[set month m]
+[? [< yday ((daysSinceJan1st:leap):m)]:
+[set mday [+ mday [- yday ((daysSinceJan1st:leap):[- m 1])]]]
+[set month m]
+[exit]]]
+(
+  ("year-day" yday)
+  ("week-day" wday)
+  ("year" year)
+  ("month" month)
+  ("day" mday)
+  ("hour" hour)
+  ("min" min)
+  ("sec" [// sec 1])
+)]
+
+[def now []:
+[set T [timedate [time]]
+[ltostr
+  ( 
+  (_FULLDAYS_:[- ((T:1):1) 1])
+  " "
+  ((T:5):1)
+  " "
+  (_FULLMONTHS_:[- ((T:3):1) 1])
+  " "
+  ((T:2):1)
+  ", "
+  ((T:5):1)
+  ":"
+  ((T:6):1)
+  ":"
+  ((T:7):1)
+)]]
+
