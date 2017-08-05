@@ -1,51 +1,88 @@
-# typedef.py: [PowerText type definition]
+# typedef.py: [PowerText] type definition
 # _*_ coding:utf8 _*_
-from time import sleep
+from exceptions import *
 
 class Base:
+    _type = 'base'
+    _EXPECTMODE = False
     def eval(self):
         raise NotImplementedError
+    def tostr(self):
+        if self.powtype() == 'base':
+            value = ttype(self.eval())._value
+        else: value = self._value
+        try: return str(value)
+        except:
+            if not self._EXPECTMODE:
+                raise PowTypeError(f'*** type error: cannot convert < {value} > to string')
+            else: return Null()
+        finally:
+            Base._EXPECTMODE = False
+    def tonum(self):
+        if self.powtype() == 'base':
+            value = self.eval()._value
+        else: value = self._value
+        try: return int(value)
+        except:
+            try: return float(value)
+            except:
+                if not self._EXPECTMODE:
+                    raise PowTypeError(f'*** type error: cannot convert < {value} > to number')
+                else: return Null()
+        finally:
+            Base._EXPECTMODE = False
     def powtype(self):
-        return self.__type
+        return self._type
 
 class Number(Base):
-    __type = 'number'
+    _type = 'number'
     def __init__(self, value):
-        self.__value = value
+        self._value = value
     def __repr__(self):
-        return str(self.__value)
+        return str(self._value)
     def __str__(self):
-        return str(self.__value)
+        return str(self._value)
     def eval(self):
-        return self.__value
+        return self._value
 
 class String(Base):
-    __type = 'string'
+    _type = 'string'
     def __init__(self, value):
-        self.__value = value
+        self._value = value
     def __repr__(self):
-       return f'"{self.value}"'
+       return f'"{self._value}"'
     def __str__(self):
-        return self.__value
+        return self._value
+    def __len__(self):
+        return len(self._value)
+    def __iter__(self):
+        return iter(self._value)
+    def __getitem__(self, index):
+        return self._value[index]
     def eval(self):
-        return self.__value
+        return self._value
 
 class Bool(Base):
-    __type = 'bool'
+    _type = 'bool'
     def __init__(self, value):
-        if value != 0: self.__value = True
-        else: self.__value = False
+        if value != 0: self._value = True
+        else: self._value = False
     def __repr__(self):
-        return 'bool: ' + str(self.__value).lower()
+        return 'bool: ' + str(self._value).lower()
     def __str__(self):
-        return str(self.__value).lower()
+        return str(self._value).lower()
+    def tostr(self):
+        return str(self._value).lower()
+    def tonum(self):
+        if self._value: return 1
+        else: return 0
     def eval(self):
-        return self.__value
+        return self._value
 
 class Null(Base):
-    __type = 'null'
+    _type = 'null'
     def __init__(self):
-        self.__value = '\0'
+        self._value = '\0'
     def __getitem__(self, index):
         return self
     def __setitem__(self, index, value):
@@ -53,7 +90,7 @@ class Null(Base):
     def __repr__(self):
         return 'null'
     def __str__(self):
-        return self.__value
+        return self._value
     def __len__(self):
         return 0
     def __eq__(self, other):
@@ -86,24 +123,26 @@ def addlist(s, t):
 
 class List(Base):
     """List type from scratch"""
-    __type = 'list'
+    _type = 'list'
     def __init__(self, head=Null(), tail=Null()):
         assert isnull(tail) or isinstance(tail, List)
         self.__head = head
         self.__tail = tail
+        self._value = self
     def __repr__(self):
         return f'( {listrepr(self)} )'
     def __getitem__(self, start, end=Null()):
         if isnull(end):
             if start == 0: return self.__head
-            return self.__tail[start-1]
+            else: return self.__tail[start-1]
         if start == 0: return self.__head + self.__tail[:end]
-        return self.__tail[start:end-1]
+        else: return self.__tail[start:end-1]
     def __setitem__(self, index, value):
         if index == 0: self.__head = value
         else: self.__tail[index-1] = value
         return value
     def __len__(self):
+        if isnull(self.__head): return 0 + len(self.__tail)
         return 1 + len(self.__tail)
     def __add__(self, other):
         return addlist(self, other)
@@ -113,13 +152,24 @@ class List(Base):
     def __ne__(self, other):
         if not isinstance(other, List): return True
         return self.__head != other.__head and self.__tail != other.__tail
-    def powtype(self):
-        return String('list')
+    def __gt__(self, other):
+        if not isinstance(other, List): return False
+        return self.__head > other.__head or self.__tail > other.__tail
+    def __ge__(self, other):
+        if not isinstance(other, List): return False
+        return self.__head >= other.__head and self.__tail >= other.__tail
+    def __lt__(self, other):
+        if not isinstance(other, List): return False
+        return self.__head < other.__head and self.__tail < other.__tail
+    def __le__(self, other):
+        if not isinstance(other, List): return False
+        return self.__head <= other.__head and self.__tail <= other.__tail
+    def tostr(self):
+        #really??
+        raise PowTypeError("*** cannot convert < list > to a string")
     def head(self):
-        """first element of the list"""
         return self.__head
     def tail(self):
-        """all elements of the list except first one"""
         return self.__tail
     def last(self):
         if isnull(self.__head): return self
@@ -135,9 +185,43 @@ class List(Base):
             last_list = self.last()
             last_list.__tail = List(item)
         return self
+    def pop(self, index=Null()):
+        if isnull(self.__head) or index > len(self) - 1: return Null()
+        if index == 0:
+            if isnull(self.__tail):
+                head = self.__head
+                self.__head = Null()
+                return head
+            head = self.__head
+            tail = self.__tail
+            self.__tail = tail.__tail
+            self.__head = tail.__head
+            return head
+        elif isnull(index):
+            index = len(self) - 1
+        current = self.__tail
+        idx = 0
+        tail = List(self.__head)
+        while idx < index - 1:
+            tail += List(current.__head)
+            current = current.__tail
+            idx += 1
+        if isnull(current):
+            head = tail
+            self.__head = Null()
+            return head
+        head = current.__head
+        self.__head = tail.__head
+        if not isnull(tail.__tail):
+            self.__tail = tail.__tail + current.__tail
+        else:
+            self.__tail = current.__tail
+        return head
+    def clear(self):
+        self.__head = Null()
+        self.__tail = Null()
     def isempty(self):
-        if isnull(self.__head): return True
-        else: return False
+        return isnull(self.__head)
     def copy(self):
         new_list = List()
         new_list.__head = self.__head
@@ -147,7 +231,7 @@ class List(Base):
         return self
 
 class Lambda(Base):
-    __type ='lambda'
+    _type ='lambda'
     def __init__(self, params, body):
         self.params = params
         self.body = body
@@ -165,13 +249,17 @@ def islambda(value):
 def isvariable(value):
     return isinstance(value, Variable)
 
+def is_(value):
+    if value: return True
+    else: return False
+
 def ttype(value):
+    if isinstance(value, bool):
+        return Bool(value)
     if isinstance(value, int) or isinstance(value, float):
         return Number(value)
     if isinstance(value, str):
         return String(value)
-    if isinstance(value, bool):
-        return Bool(value)
     if value is None:
         return Null()
     return value

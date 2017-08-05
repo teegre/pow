@@ -9,25 +9,19 @@
 [def isempty [a]:
 [or [= a ""] [= a ()]]]
 
-[def pone [n]:
-[+ n 1]]
-
-[def mone [n]:
-[- n 1]]
-
 [def tolist [S]:
 ;; convert a string to a list
 [set L ()]
-[for [i 0 [mone [len S]]]:
+[echo S "\n"]
+[for [i 0 [1- [len S]]]:
 [push L (S:i)]]
 L]
 
-[def tostr [L]:
+[def ltostr [L]:
 ;; convert a list to a string
-[set S ""]
-[for [i 0 [mone [len L]]]:
-[set S [+ S (L:i)]]]
-S]
+[? L:
+[+ [tostr [head L]] [ltostr [tail L]]];
+""]]
 
 [def index [L item]:
 ;; get the index of an item in a list
@@ -46,31 +40,18 @@ S]
 [* n [fact [- n 1]]]]]
 
 [def sum [L]:
-[? [isnull L]: 0;
-[? [= L [last L]]:
-[? [isnull [head L]]: 0; [head L]];
-[+ [head L] [sum [tail L]]]]]]
-
-[def count [item L]:
 [? L:
-[+ [= item [head L]] [count item [tail L]]];
+[+ [head L] [sum [tail L]]];
 0]]
 
+[def count [item L]:
+;; count occurrences of an item in a list
+[? L: [+ [= item [head L]] [count item [tail L]]]; 0]]
+
 [def in [a b]:
-[? [= b null]: false;
+[? [not b]: false;
 [? [= a [head b]]: true;
 [in a [tail b]]]]]
-
-[def slice [a s e]:
-[? [or [> s e] [or [< s 0] [> e [len a]]]]:
-[echo "** invalid parameters."]
-null;
-[set n ()]
-[set i s]
-[while [<= i e]:
-[push n (a:i)]
-[++ i]]
-n]]
 
 [def abs [x]:
 [? [>= x 0]: x; -x]]
@@ -90,7 +71,7 @@ L]
 
 [def steprange [a b c]:
 ;; return a list of numbers
-;; ranging from a, a+c to b
+;; ranging from a to b with a step of c
 [set L ()]
 [? [< a b]:
   [while [<= a b]:
@@ -105,28 +86,32 @@ L]
 ;;sort list (in place)
 [? [isempty L]: L;
 [set m null]
-[set q [mone [len L]]]
+[set q [1- [len L]]]
 [for [i q 0 -1]:
 [for [ii 0 i]:
-[? [> (L:ii) (L:[pone ii])]:
+[? [> (L:ii) (L:[1+ ii])]:
 [set m (L:ii)]
-[set (L:ii) (L:[pone ii])]
-[set (L:[pone ii]) m]]]]
+[set (L:ii) (L:[1+ ii])]
+[set (L:[1+ ii]) m]]]]
 L]]
 
 [def rndl [L]:
 ;; return randomized list
-[set m [set n null]]
+[? L:
 [set new ()]
-[set q [len L]]
-[while [!= [len new] q]:
-[? [not [in [set n (L:[rndr 0 q])] new]]: [push new n]]]
-new]
+[set index [range 0 [1- [len L]]]]
+[while [!= [len new] [len L]]:
+[set i [rndr 0 [len index]]]
+[push new (L:(index:i))]
+[pop index i]]
+new;
+L]]
 
 [def reverse [L]:
+;; reverse order of a list (in place)
 [? [isnull L]: null;
 [set i 0]
-[set j [mone [len L]]]
+[set j [1- [len L]]]
 [while [< i j]:
 [set a (L:i)] [set b (L:j)]
 [set (L:j) a] [set (L:i) b]
@@ -145,6 +130,24 @@ L]]
 [set m2 [head L]]
 [? [< m1 m2]: m1; m2]]]
 
+[def get-value [L key]:
+;; get the value of a given key
+;; ((key1 value1) (key2 value2) ... (keyN valueN)) 
+[? L:
+[? [= key ([head L]:0)]: ([head L]:1); [get-value [tail L] key]];
+null]]
+
+[def get-pair [L key]:
+[? L:
+[? [= key ([head L]:0)]: [head L]; [get-pair [tail L] key]];
+null]]
+
+[def set-value [L key value]:
+[? [= [type L] list]:
+[? [set a [get-pair L key]]: [set (a:1) value];
+[push L (key value)]];
+null]]
+
 [def rndr [a b]:
 ;; return an integer between a and b if a < b,
 ;; between b and a otherwise.
@@ -152,17 +155,37 @@ L]]
 [set hi [? [> a b]: a; b]] 
 [// [+ [* [rnd] hi] lo] 1]]
 
+[def base [n b]:
+;; convert n into base b
+[? [or [< b 2] [> b 36]]: [echo "*** invalid base (2-36)"];
+[? [= n 0]: "0";
+[set digits (
+"0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
+"A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
+"K" "L" "M" "N" "O" "P" "Q" "R" "S" "T"
+"U" "V" "W" "X" "Y" "Z"
+)]
+[set result ""]
+[while [> n 0]:
+[set result [+ (digits:[% n b]) result]]
+[set n [// n b]]]
+result]]]
+
 [def cls []:
+;; clear the screen
 [echo "\x1b[2J\x1b[H"]]
 
 [def locate [y x]:
+;; move cursor
 [echo "\x1b[" y ";" x "H"]]
 
 [def lecho [y x text]:
+;; move cursor and print text
 [locate y x]
 [echo text]]
 
 [def clrline [y x]:
+;; clear a line
 [locate y x]
 [echo "\x1b[K"]]
 
@@ -173,18 +196,22 @@ L]]
 [echo "\x1b[?25h"]]
 
 [def scrh []:
+;; screen height
 [set s [scrsize]]
 (s:0)]
 
 [def scrw []:
+;; screen width
 [set s [scrsize]]
 (s:1)]
 
 [def cury []:
+;; cursor y position
 [set yx [getcur]]
 (yx:0)]
 
 [def curx []:
+;; cursor x location
 [set yx [getcur]]
 (yx:1)]
 

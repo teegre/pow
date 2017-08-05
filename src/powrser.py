@@ -53,6 +53,7 @@ def p_expr(p):
             | pow_type
             | variable
             | list_expr
+            | list_access
             | lambda_expr
             | if_statement
             | while_statement
@@ -68,15 +69,15 @@ def p_pow_type(p):
                 | TYPE_NUM
                 | TYPE_STR
                 | TYPE_LIST"""
-    p[0] = powast.String(p[1])
+    p[0] = p[1]
 
 def p_variable(p):
-    """variable : ID
-                | LPAREN ID COLUMN expr RPAREN"""
-    if len(p) == 2:
-        p[0] = powast.Variable(p[1])
-    else:
-        p[0] = powast.Get(powast.Variable(p[2]), p[4])
+    """variable : ID"""
+    p[0] = powast.Variable(p[1])
+
+def p_list_access(p):
+    """list_access : LPAREN expr COLUMN expr RPAREN"""
+    p[0] = powast.Get(p[2], p[4])
 
 def p_list_expr(p):
     """list_expr : LPAREN RPAREN
@@ -120,6 +121,10 @@ def p_expr_uminus(p):
     """expr : MINUS expr %prec UMINUS"""
     p[0] = powast.Negative(p[2])
 
+def p_is_command(p):
+    """command : IS expr"""
+    p[0] = powast.Is(p[2])
+
 def p_command_echo(p):
     """command : ECHO
                | ECHO sequence"""
@@ -127,6 +132,18 @@ def p_command_echo(p):
         p[0] = powast.Echo()
     else:
         p[0] = powast.Echo(p[2])
+
+def p_command_read(p):
+    """command : READ
+               | READ sequence"""
+    if len(p) == 2:
+        p[0] = powast.Read()
+    else:
+        p[0] = powast.Read(p[2])
+
+def p_command_expect(p):
+    """command : EXPECT pow_type expr"""
+    p[0] = powast.Expect(p[2], p[3])
 
 def p_command_binop(p):
     """command : PLUS  expr expr
@@ -143,6 +160,14 @@ def p_command_binop(p):
                | GT    expr expr
                | GE    expr expr"""
     p[0] = powast.BinOp(p[1], p[2], p[3])
+
+def p_command_plus_one(p):
+    """command : PLUSONE expr"""
+    p[0] = powast.BinOp('+', p[2], powast.ttype(1))
+
+def p_command_minus_one(p):
+    """command : MINUSONE expr"""
+    p[0] = powast.BinOp('-', p[2], powast.ttype(1))
 
 def p_command_incdec(p):
     """command : INC ID
@@ -168,13 +193,11 @@ def p_command_boolop(p):
 def p_command_listcmd(p):
     """command : HEAD expr
                | TAIL expr
-               | LAST expr
                | LEN  expr
                | MAP expr expr
                | FILTER expr expr"""
     if    p[1] == 'head'  : p[0] = powast.Head(p[2])
     elif  p[1] == 'tail'  : p[0] = powast.Tail(p[2])
-    elif  p[1] == 'last'  : p[0] = powast.Last(p[2])
     elif  p[1] == 'map'   : p[0] = powast.Map(p[2], p[3])
     elif  p[1] == 'filter': p[0] = powast.Filter(p[2], p[3])
     else: p[0] = powast.Len(p[2])
@@ -182,6 +205,14 @@ def p_command_listcmd(p):
 def p_command_type(p):
     """command : TYPE expr"""
     p[0] = powast.Type(p[2])
+
+def p_command_tostr(p):
+    """command : TOSTR expr"""
+    p[0] = powast.ToStr(p[2])
+
+def p_command_tonum(p):
+    """command : TONUM expr"""
+    p[0] = powast.ToNum(p[2])
 
 def p_command_set(p):
     """command : SET ID expr
@@ -194,6 +225,14 @@ def p_command_set(p):
 def p_command_push(p):
     """command : PUSH ID sequence"""
     p[0] = powast.Push(powast.Variable(p[2]), p[3])
+
+def p_command_pop(p):
+    """command : POP ID
+               | POP ID expr"""
+    if len(p) == 3:
+        p[0] = powast.Pop(powast.Variable(p[2]))
+    else:
+        p[0] = powast.Pop(powast.Variable(p[2]), p[3])
 
 def p_command_def(p):
     """command : DEF ID LBRACKET RBRACKET COLUMN statements

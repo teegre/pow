@@ -53,7 +53,7 @@ def main():
                 result = instructions.eval()
                 if result is not None and not isinstance(result, powast.Exit):
                     for r in result:
-                        if r is not None: print(powast.ttype(r))
+                        print(powast.ttype(r))
             elif instructions is not None:
                 for instruction in instructions:
                     print(instruction)

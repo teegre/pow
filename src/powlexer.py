@@ -12,7 +12,8 @@ reserved = {
         'string'  : 'TYPE_STR',
         'list'    : 'TYPE_LIST',
         'echo'    : 'ECHO',     #OK print function
-#        'input'  : 'INPUT',    #   user input
+        'read'    : 'READ',     #   user input
+        'expect'  : 'EXPECT',   #   check type
         'set'     : 'SET',      #OK variable assignation
         'del'     : 'DEL',      #OK variable / function deletion
         'for'     : 'FOR',      #OK for loop
@@ -29,13 +30,13 @@ reserved = {
         'rnd'     : 'RND',      #OK random number (0...1)
         'head'    : 'HEAD',     #OK first element of a list
         'tail'    : 'TAIL',     #OK all elements after the first one
-        'last'    : 'LAST',     #OK last element (null terminated)
         'push'    : 'PUSH',     #OK add item(s) to a list
-#        'pop'    : 'POP',      #NOT OK remove an item from a list
+        'pop'     : 'POP',      #OK remove an item from a list
         'map'     : 'MAP',      #
         'filter'  : 'FILTER',   #
-        'type'    : 'TYPE',    #
-#        'tonum'  : 'TONUM',    #OK convert a string to a number
+        'type'    : 'TYPE',     #
+        'tostr'   : 'TOSTR',    #
+        'tonum'   : 'TONUM',    #
         'uses'    : 'USES',     #   module import
         'getcur'  : 'GETCUR',   #   cursor position
         'scrsize' : 'SCRSIZE',  #   screen size
@@ -48,14 +49,13 @@ tokens = [
             'NULL', 'NUMBER', 'BOOL', 'STRING',
             'EQ', 'NE', 'GT', 'GE', 'LT', 'LE',
             'PLUS', 'MINUS', 'MUL', 'DIV', 'IDIV', 'MOD', 'POW', 'POW2',
-            'INC', 'DEC',
+            'INC', 'DEC', 'PLUSONE', 'MINUSONE',
             'LPAREN', 'RPAREN', 'LBRACKET', 'RBRACKET', 'AT', 'QUESTION',
-            'COLUMN', 'SEMI',
+            'COLUMN', 'SEMI', 'IS',
             'ID',
 ] + list(reserved.values())
 
 t_PLUS     = r'\+'
-t_MINUS    = '-'
 t_POW      = r'\*\*\*'
 t_POW2     = r'\*\*'
 t_MUL      = r'\*'
@@ -69,17 +69,25 @@ t_GT       = '>'
 t_LT       = '<'
 t_MOD      = '%'
 t_INC      = r'\+\+'
-t_DEC      = '--'
 t_LPAREN   = r'\('
 t_RPAREN   = r'\)'
 t_LBRACKET = r'\['
 t_RBRACKET = r'\]'
 t_AT       = r'@'
+t_IS       = r'\?\?'
 t_QUESTION = r'\?'
 t_COLUMN   = r'\:'
 t_SEMI     = r';'
 
 t_ignore   = ' \t'
+
+def t_PLUSONE(t):
+    r'1\+'
+    return t
+
+def t_MINUSONE(t):
+    r'1-'
+    return t
 
 def t_BOOL(t):
     r'\btrue\b|\bfalse\b'
@@ -92,11 +100,6 @@ def t_BOOL(t):
 def t_NULL(t):
     r'\bnull\b'
     t.value = Null()
-    return t
-
-def t_ID(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = reserved.get(t.value, 'ID')
     return t
 
 def t_NUMBER(t):
@@ -112,6 +115,19 @@ def t_STRING(t):
     # workaround: enabling single-quoted strings...
     r'\".*?\"|\'.*?\''
     t.value = bytes(t.value[1:-1], 'latin-1').decode('unicode-escape')
+    return t
+
+def t_DEC(t):
+    r'--'
+    return t
+
+def t_MINUS(t):
+    r'-'
+    return t
+
+def t_ID(t):
+    r'[a-zA-Z\-_][a-zA-Z\-_0-9]*'
+    t.type = reserved.get(t.value, 'ID')
     return t
 
 def t_COMMENT(t):

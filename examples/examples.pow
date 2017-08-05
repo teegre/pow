@@ -13,17 +13,17 @@
 [def typewrite [y x t]:
 [set i 0]
 [while [< i [len t]]:
-[locate [+ y 1] [+ x i]] [echo (t:i)]
+[locate [1+ y] [+ x i]] [echo (t:i)]
 [pause 0.018125]
 [locate y [+ x i]] [echo (t:i)]
 [pause 0.018125]
-[locate [+ y 1] [+ x i]] [echo " "]
+[locate [1+ 1] [+ x i]] [echo " "]
 [pause 0.125]
 [++ i]]
 [locate y 1]]
 
 [def simple [y x t]:
-[for [i 0 [mone [len t]]]:
+[for [i 0 [1- [len t]]]:
 [locate y [+ x i]] [echo (t:i)]
 [pause 0.018125]]]
 
@@ -107,27 +107,15 @@ D]]]
 [set y (cursor:0)]
 [hidecursor]
 [while true:
-[? [> i [mone [len a]]]: [set i 0]]
+[? [> i [1- [len a]]]: [set i 0]]
 [locate y 1] [echo (a:i) " now loading."]
 [pause 0.125]
 [++ i]]
 [showcursor]]
 
-[def base [n b]:
-;; convert n into base b
-[? [or [< b 2] [> b 36]]: [echo "*** invalid base (2-36)"];
-[? [= n 0]: "0";
-[set digits (
-"0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
-"A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
-"K" "L" "M" "N" "O" "P" "Q" "R" "S" "T"
-"U" "V" "W" "X" "Y" "Z"
-)]
-[set result ""]
-[while [> n 0]:
-[set result [+ (digits:[% n b]) result]]
-[set n [// n b]]]
-result]]]
+;; lnn : convert a list of integer to a number
+;;       (1 2 3 4) => 1234
+[def lnn [L]: [? L: [+ [* [head L] [*** 10 [1- [len L]]]] [lnn [tail L]]]; 0]]
 
 [def flowers []:
   [def flower [y x]:

@@ -10,7 +10,7 @@ from symbols import Symbols
 from exceptions import *
 from sys import stdin, stdout
 from random import random, shuffle
-from time import time, sleep
+from time import time, strftime, sleep
 
 symbols = Symbols()
 
@@ -69,39 +69,74 @@ class Echo(Base):
                     self.pprint(str(item.eval()))
             return ''.join([str(item) for item in result])
 
-class Get(Base):
-    def __init__(self, iterable, start, end=Null()):
-        self.iterable = iterable
-        self.start = start
-        self.end = end
+class Read(Base):
+    def __init__(self, prompt=Null()):
+        self._value = ''
+        self.prompt = prompt
     def __repr__(self):
-        return f'({self.iterable}:{self.start})'
+        return f'[read]'
+    def pprint(self, *elements):
+        stdout.write(out)
+        stdout.flush()
+        return out
     def eval(self):
         try:
-            if isnull(self.end):
-                return self.iterable.eval()[self.start.eval()]
-            return self.iterable.eval()[self.start.eval():self.end.eval()]
+            if not isnull(self.prompt):
+                prompt = ''.join([str(item.eval()) for item in self.prompt])
+            else: prompt = ''
+            self._value = ttype(input(prompt))
+            return self._value
+        except KeyboardInterrupt:
+            print()
+            print('*** read: interrupted by user')
+            return Exit(Null()) 
+
+
+class Expect(Base):
+    def __init__(self, _type, value):
+        self.type = _type
+        self._value = value
+    def repr(self):
+        return f'[expect: {self.type}]'
+    def eval(self):
+        Base._EXPECTMODE = True
+        value = self._value.eval()
+        if ttype(value)._type == self.type: return value
+        else: return Null()
+
+class Get(Base):
+    def __init__(self, iterable, index):
+        self.iterable = iterable
+        self.index = index
+    def __repr__(self):
+        return f'({self.iterable}:{self.index})'
+    def eval(self):
+        try: return self.iterable.eval()[self.index.eval()]
         except TypeError:
-            raise PowTypeError(f'*** ({self.iterable.eval().powtype()}:{self.start.eval().powtype()}) type error')
+            raise PowTypeError(f'*** type error:\n\
+*** expected (list:number)\n\
+*** got ({ttype(self.iterable.eval()).powtype()}:{ttype(self.index.eval()).powtype()})')
+        except IndexError:
+            raise PowRuntimeError(f'*** invalid index: < {self.index.eval()} >')
 
 class Set(Base):
     def __init__(self, name, value, index=None):
         self.name = name
-        self.value = value
+        self._value = value
         self.index = index
     def __repr__(self):
-        return f'[set: {self.name}<-{self.value}]'
+        return f'[set: {self.name}<-{self._value}]'
     def __iter__(self):
-        return iter(self.value.eval())
+        return iter(self._value)
     def eval(self):
-        value = self.value
+        value = self._value.eval()
         if self.index is None:
-            if isinstance(value.eval(), List):
-                result = symbols.set_variable(self.name, value.eval().copy())
+            if isinstance(value, List):
+                result = symbols.set_variable(self.name, value.copy())
             else:
-                result = symbols.set_variable(self.name, value.eval())
+                result = symbols.set_variable(self.name, value)
         else:
-            result = symbols.set_item(self.name, self.index.eval(), value.eval())
+            result = symbols.set_item(self.name, self.index.eval(), value)
         return result
 
 class Del(Base):
@@ -131,19 +166,32 @@ class MakeList(Base):
 class Push(Base):
     def __init__(self, _list, value):
         self.list = _list
-        self.value = value
+        self._value = value
     def __repr__(self):
-        return f'push: {self.list}<-{self.value}'
+        return f'push: {self.list}<-{self._value}'
     def eval(self):
         _list = self.list.eval()
         try:
-            for value in self.value:
+            for value in self._value:
                 _list.push(value.eval())
             return _list
         except AttributeError:
-            raise PowTypeError('*** push: list expected, got {self.list.powtype()}')
+            raise PowTypeError(f'*** push: list expected, got {self.list.powtype()}')
             return _list
         except Exception as e: raise PowRuntimeError(e)
+
+class Pop(Base):
+    def __init__(self, _list, index=Null()):
+        self.list = _list
+        self.index = index
+    def __repr__(self):
+        return f'[pop: {self.list}->{self.index}]'
+    def eval(self):
+        _list = self.list.eval()
+        try:
+            return _list.pop(self.index.eval())
+        except AttributeError:
+            raise PowTypeError(f'*** pop: list expected, got {self.list.powtype()}')
 
 class Head(Base):
     def __init__(self, _list):
@@ -165,15 +213,15 @@ class Tail(Base):
         except AttributeError:
             raise PowTypeError(f'*** tail: list expected, got {self.list.powtype()}')
 
-class Last(Base):
-    def __init__(self, _list):
-        self.list = _list
-    def __repr__(self):
-        return f'[tail: {self.list}]'
-    def eval(self):
-        try: return self.list.eval().last()
-        except AttributeError:
-            raise PowTypeError(f'*** last: list expected, got {self.list.powtype()}')
+#class Last(Base):
+#    def __init__(self, _list):
+#        self.list = _list
+#    def __repr__(self):
+#        return f'[tail: {self.list}]'
+#    def eval(self):
+#        try: return self.list.eval().last()
+#        except AttributeError:
+#            raise PowTypeError(f'*** last: list expected, got {self.list.powtype()}')
 
 class Len(Base):
     def __init__(self, item):
@@ -184,6 +232,28 @@ class Len(Base):
         try: return len(self.item.eval())
         except TypeError:
             raise PowTypeError(f'*** len: {self.item.powtype()} has no length')
+
+class ToStr(Base):
+    def __init__(self, item):
+        self.item = item
+    def __repr__(self):
+        return f'[tostr: {self.item}]'
+    def eval(self):
+        if isinstance(self.item, Variable):
+            item = self.item.eval()
+        else: item = self.item
+        return item.tostr()
+
+class ToNum(Base):
+    def __init__(self, item):
+        self.item = item
+    def __repr__(self):
+        return f'[tonum: {self.item}]'
+    def eval(self):
+        if isinstance(self.item, Variable):
+            item = ttype(self.item.eval())
+        else: item = self.item
+        return item.tonum()
 
 def filter_list(expr, _list):
     if isnull(_list): return _list
@@ -228,8 +298,8 @@ class Type(Base):
         return f'[type: {self.item}]'
     def eval(self):
         if isinstance(self.item, Variable):
-            return type(self.item.eval())
-        else: return type(self.item)
+            return ttype(self.item.eval()).powtype()
+        else: return ttype(self.item).powtype()
 
 class BinOp(Base):
     __op = {
@@ -332,9 +402,9 @@ class Negative(Base):
         return f'-{self.value}'
     def eval(self):
         try:
-            if isinstance(self.value, Variable): value = self.value.eval()
+            if isinstance(self.value, (Variable, Number)): value = self.value.eval()
             else: value = self.value
-            return -value.eval()
+            return -value
         except TypeError:
             raise PowTypeError(f'*** -{self.value}: number expected, got {self.value.powtype}')
         except Exception as e: raise PowRuntimeError(e)
@@ -367,7 +437,11 @@ class Time(Base):
     def __repr__(self):
         return f'[time]'
     def eval(self):
-        return time()
+        tz = int(strftime('%z'))
+        tzh = tz // 100
+        tzm = tz % 100
+
+        return time() + (tzh * 3600) + (tzm * 60)
 
 class Pause(Base):
     def __init__(self, duration):
@@ -376,6 +450,7 @@ class Pause(Base):
         return f'[pause: {self.duration}]'
     def eval(self):
         sleep(self.duration.eval())
+        return Null()
 
 class If(Base):
     def __init__(self, condition, dothis, dothat):
@@ -403,15 +478,15 @@ class If(Base):
 
 class Exit(Base):
     def __init__(self, value):
-        self.value = value
+        self._value = value
     def __iter__(self):
         return []
     def __repr__(self):
-        if self.value:
+        if self._value:
             return f'[exit: {self.value}]'
         else: return '[exit]'
     def eval(self):
-        return self.value.eval()
+        return self._value.eval()
 
 class While(Base):
     def __init__(self, condition, dothis):
@@ -447,19 +522,31 @@ class For(Base):
             var = self.var
             setvar = Set(var, a)
             i = a
-            if a.eval() > b.eval(): op = '>='
+            if a.eval() == b.eval(): op = '='
+            elif a.eval() >= b.eval(): op = '>='
             else: op = '<='
             while BinOp(op, i, b).eval():
                 setvar.eval()
                 result = body.eval()
                 if isinstance(result, Exit):
-                    print('if:', result)
-                    return result
+                    return result.eval()
                 setvar = Set(var, BinOp('+', i, step))
                 i = BinOp('+', i, step)
+            return result[-1]
         except KeyboardInterrupt:
             print()
             raise PowInterrupt('*** for: interrupted by user')
+        finally:
+            if not symbols.islocal(): Del(var).eval()
+
+class Is(Base):
+    def __init__(self, value):
+        self._value = value
+    def __repr__(self):
+        return f'[??: {self._value}]'
+    def eval(self):
+        return is_(self._value.eval())
+
 
 class Def(Base):
     def __init__(self, name, params, body):
@@ -495,7 +582,8 @@ class FunctionCall(Base):
             result = body.eval()
             try: result = result.eval()
             except: pass
-            return result[-1]
+            try: return result[-1]
+            except: return result
         except PowException as e : print(e)
         finally: symbols.del_local()
 

@@ -7,7 +7,7 @@ animations in a terminal. Basically the language needed to have functions to mov
 
 Similar to LISP, but parentheses have been replaced by square brackets. So for adding 2 and 2, just type: [+ 2 2]  which should return 4.
 
-## 1.1 Types
+# 2. Types
 
 There are five different types in [PowerText]:
 
@@ -17,7 +17,7 @@ There are five different types in [PowerText]:
 - boolean: true, false
 - null
 
-## 1.2 Variable assignment
+# 3 Variable assignment
 
 Function «set».
 
@@ -31,31 +31,58 @@ For example, let's say you also need a variable "a" equal to "b", you would writ
 The string "Hello, World" is first assigned to variable "b" and then, the result of the «set» function is assigned to variable "a".
 To assign a list to a variable:
 
-  [set l (0 1 2 3 4 5 6 7 8 9)]
-  [set l ()] (to assign an empty list)
+  [set L (0 1 2 3 4 5 6 7 8 9)]
+
+  [set L ()] (to assign an empty list)
 
 For more information about lists, see chapter LISTCHAPTER.
 
-## 1.3 ?, for and while.
+# 4 ?, for and while.
 
 In [PowerText], "?" is equivalent to if, and its syntax is as follow:
 
-  [? [condition]: [dothis]; [dothat]]
+  [? condition: dothis; dothat]
 
 Note that [dothis] can be one or more statements:
 
-  [? [condition]:
-  [dothis]
-  [andthis]
-  [andalsothis]]
+  [? condition:
+  dothis
+  and-this
+  and-also-this]
 
 For loop:
 
-  [for [variable start end]: [dothis]]
-  [for [variable start end step]: [dothis]]
+  [for [variable start end]: dothis]
+
+  [for [variable start end step]: dothis]
 
 While loop:
 
-  [while [condition]: [dothis]]
+  [while condition: dothis]
 
-## 1.4
+# 5 Functions
+
+## 5.1 Function definition
+
+[def name [parameters]:
+body]
+
+The last statement is returned by the function
+
+## 5.2 Lambda function
+
+Lambda functions have to be assigned to a variable:
+
+[set name [lambda [parameters]: expression]]
+
+Example:
+
+[set square [lambda [x]: [* x x]]]
+
+To call a lambda:
+
+[@square 2]
+
+4
+
+
