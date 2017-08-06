@@ -8,12 +8,11 @@
 [def leapyear [y]:
 [?? [and [not [% y 4]] [or [% y 100] [not [% y 400]]]]]]
 
-[def timedate [T]:
+[def timedate [sec]:
 [set daysSinceJan1st (
   (0 31 59 90 120 151 181 212 243 273 304 334 365)
   (0 31 60 91 121 152 182 213 244 274 305 335 366)
 )]
-[set sec T] 
 [set wday [// [+ [% [/ [+ sec 1164473600] 86400] 7] 1] 1]]
 [set qct [// [/ sec 12622815360] 1]]
 [set sec [% sec 12622815360]]
@@ -51,6 +50,49 @@
   ("min" min)
   ("sec" [// sec 1])
 )]
+
+[def sec-to-minsec [sec]:
+[set s [// [% sec 60] 1]]
+[set m [// sec 60]]
+(('m' m) ('s' s))]
+
+[def sec-to-hms [sec]:
+[set s [// [% sec 60] 1]]
+[set m [// sec 60]]
+[? [>= m 60]: [set h [// m 60]] [set m [% m 60]]; [set h 0]]
+(("h" h) ("m" m) ("s" s))]
+
+[def time-to-str [T]:
+[? [= [type T] list]:
+  [set s [get-value T "s"]]
+  [set m [get-value T "m"]]
+  [set ss [? [< s 10]: [+ "0" [tostr s]]; [tostr s]]]
+  [set mm [? [< m 10]: [+ "0" [tostr m]]; [tostr m]]]
+  [? [= [len T] 3]: [set h [tostr [get-value T "h"]]]
+    [+ h [+ ":" [+ mm [+ ":" ss]]]];
+    [+ mm [+ ":" ss]]]]]
+
+[def date-to-str [T]:
+[? [= [type T] list]:
+  [set d [get-value T "day"]]
+  [set m [get-value T "month"]]
+  [set y [get-value T "year"]]
+  [set dd [? [< d 10]: [+ "0" [tostr d]]; [tostr d]]]
+  [set mm [? [< m 10]: [+ "0" [tostr m]]; [tostr m]]]
+  [+ dd [+ "/" [+ mm [+ "/" [tostr y]]]]]]]
+  
+[def ctime []:
+[set T [timedate [time]]]
+[set h [* [get-value T "hour"] 3600]]
+[set m [* [get-value T "min"] 60]]
+[set s [get-value T "sec"]]
+[set t [+ h [+ m s]]]
+[set TS [sec-to-hms t]]
+[time-to-str TS]]
+
+[def cdate []:
+[set T [timedate [time]]]
+[date-to-str T]]
 
 [def now []:
 [set T [timedate [time]]]

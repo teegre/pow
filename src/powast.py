@@ -240,7 +240,7 @@ class ToStr(Base):
         return f'[tostr: {self.item}]'
     def eval(self):
         if isinstance(self.item, Variable):
-            item = self.item.eval()
+            item = ttype(self.item.eval())
         else: item = self.item
         return item.tostr()
 
