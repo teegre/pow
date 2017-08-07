@@ -64,13 +64,11 @@ class Symbols:
 
     def set_local(self):
         self.table[self.__local].append({})
+        self.table[self.__localfunc].append({})
 
     def del_local(self):
         self.table[self.__local].pop()
-        if self.islocalfunction: self.table[self.__localfunc].pop()
-
-    def set_localfunction(self):
-        self.table[self.__localfunc].append({})
+        self.table[self.__localfunc].pop()
 
     def is_function(self, name):
         return name in self.table[self.__func].keys()

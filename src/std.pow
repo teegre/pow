@@ -1,5 +1,7 @@
 ;; [PowerText] Standard Library
 
+[set _pi_ 3.141592653589793]
+
 [def isnull [a]:
 [= a null]]
 
@@ -36,8 +38,10 @@ L]
 [? [isnull l]: null; idx]]
 
 [def fact [n]:
-[? [or [= n 0] [= n 1]]: 1;
-[* n [fact [- n 1]]]]]
+  [def fact-tail [n prod]:
+  [? [= n 0]: prod;
+  [fact-tail [- n 1] [* n prod]]]]
+[fact-tail n 1]]
 
 [def sum [L]:
 [? L:

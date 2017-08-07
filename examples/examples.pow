@@ -10,6 +10,34 @@
 [? [or [= n 0] [= n 1]]: 1;
 [+ [rfib [- n 1]] [rfib [- n 2]]]]]
 
+[def fib [n]:
+;; better recursive Fibonacci sequence
+  [def fib-helper [n a b]:
+  [? [> n 0]:
+    [fib-helper [1- n] b [+ a b]];
+    a]]
+[fib-helper n 1 1]]
+
+[def ifib [n]:
+;; iterative Fibonacci sequence
+  [def fib-iter [n]:
+  [? [<= n 1]: 1;
+  [set a [set b 1]]
+  [set i 0]
+  [set r [range 0 [- n 1]]]
+  [while [in i r]:
+  [set c [+ a b]]
+  [set a b]
+  [set b c]
+  [++ i]]
+  c]]
+[set r [range 0 [- n 1]]]
+[set i 0]
+[while [in i r]:
+[set f [fib-iter i]]
+[++ i]]
+f]
+
 [def typewrite [y x t]:
 [set i 0]
 [while [< i [len t]]:
@@ -26,27 +54,6 @@
 [for [i 0 [1- [len t]]]:
 [locate y [+ x i]] [echo (t:i)]
 [pause 0.018125]]]
-
-[def fib [n]:
-;; Fibonacci sequence with closure
-;; Faster.
-  [def fibii [n]:
-  [? [<= n 1]: 1;
-  [set a [set b 1]]
-  [set i 0]
-  [set r [range 0 [- n 1]]]
-  [while [in i r]:
-  [set c [+ a b]]
-  [set a b]
-  [set b c]
-  [++ i]]
-  c]]
-[set r [range 0 [- n 1]]]
-[set i 0]
-[while [in i r]:
-[set f [fibii i]]
-[++ i]]
-f]
 
 [def E []:
 [set e 2]

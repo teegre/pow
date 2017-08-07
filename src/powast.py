@@ -560,6 +560,7 @@ class Def(Base):
         return f'[{self.name}]'
 
 class FunctionCall(Base):
+    _type = 'function'
     def __init__(self, name, params):
         self.name = name
         self.params = params
@@ -567,7 +568,6 @@ class FunctionCall(Base):
         return f'[function call: [{self.name} {self.params}]]'
     def eval(self):
         func = symbols.get_function(self.name)
-        if func is None: return Null() # ?
         params = func[0]
         if len(params) != len(self.params):
             raise InvalidParamCount(f'*** {self.name}: invalid number of parameters.\n*** expected {len(params)}, got {len(self.params)}')
@@ -575,7 +575,6 @@ class FunctionCall(Base):
         sparams = [param.eval() for param in self.params]
         body = func[1]
         symbols.set_local()
-        symbols.set_localfunction()
         for index, param in enumerate(params):
             result = symbols.set_variable(param, sparams[index])
         try:
@@ -588,6 +587,7 @@ class FunctionCall(Base):
         finally: symbols.del_local()
 
 class LambdaCall(Base):
+    _type = 'lambda'
     def __init__(self, f, params):
         self.f = f
         self.params = params
@@ -602,17 +602,17 @@ class LambdaCall(Base):
         if len(self.params) != len(f.params):
             raise InvalidParamCount(f'*** lambda: invalid number of parameters.\n*** expected {len(f.params)}, got {len(self.params)}')
         symbols.set_local()
-        symbols.set_localfunction()
         for index, param in enumerate(f.params):
             symbols.set_variable(param, sparams[index])
         try:
             result = f.body.eval()
             try: result = result.eval()
             except: pass
-            symbols.del_local()
             return result
         except KeyboardInterrupt:
             raise PowInterrupt('*** lambda: interrupted by user')
+        finally:
+            symbols.del_local()
 
 class Uses(Base):
     def __init__(self, module, parser):

@@ -251,12 +251,20 @@ def p_command_call(p):
         p[0] = powast.FunctionCall(p[1], p[2])
 
 def p_command_lambda(p):
-    """command : LAMBDA LBRACKET id_sequence RBRACKET COLUMN expr"""
-    p[0] = powast.Lambda(p[3], p[6])
+    """command : LAMBDA LBRACKET RBRACKET COLUMN expr
+               | LAMBDA LBRACKET id_sequence RBRACKET COLUMN expr"""
+    if len(p) == 6:
+        p[0] = powast.Lambda([], p[5])
+    else:
+        p[0] = powast.Lambda(p[3], p[6])
 
 def p_command_lambdacall(p):
-    """command : AT ID sequence"""
-    p[0] = powast.LambdaCall(powast.Variable(p[2]), p[3])
+    """command : AT ID
+               | AT ID sequence"""
+    if len(p) == 3:
+        p[0] = powast.LambdaCall(powast.Variable(p[2]), [])
+    else:
+        p[0] = powast.LambdaCall(powast.Variable(p[2]), p[3])
 
 def p_command_del(p):
     """command : DEL ID"""
