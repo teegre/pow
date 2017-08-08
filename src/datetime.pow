@@ -34,7 +34,7 @@
 [set min [// sec 60]]
 [set sec [% sec 60]]
 [set mday 0]
-[for [m 1 12]:
+[for m 1 12:
 [set month m]
 [? [< yday ((daysSinceJan1st:leap):m)]:
 [set mday [+ mday [- yday ((daysSinceJan1st:leap):[- m 1])]]]

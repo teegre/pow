@@ -110,12 +110,12 @@ def p_exit_statement(p):
     else: p[0] = powast.Exit(p[3])
 
 def p_for_statement(p):
-    """for_statement : LBRACKET FOR LBRACKET ID expr expr RBRACKET COLUMN statements RBRACKET
-                     | LBRACKET FOR LBRACKET ID expr expr expr RBRACKET COLUMN statements RBRACKET"""
-    if len(p) == 11:
-        p[0] = powast.For(p[4], p[5], p[6], powast.Number(1), p[9])
+    """for_statement : LBRACKET FOR ID expr expr COLUMN statements RBRACKET
+                     | LBRACKET FOR ID expr expr expr COLUMN statements RBRACKET"""
+    if len(p) == 9:
+        p[0] = powast.For(p[3], p[4], p[5], powast.Number(1), p[7])
     else:
-        p[0] = powast.For(p[4], p[5], p[6], p[7], p[10])
+        p[0] = powast.For(p[3], p[4], p[5], p[6], p[8])
 
 def p_expr_uminus(p):
     """expr : MINUS expr %prec UMINUS"""

@@ -1,6 +1,9 @@
 # typedef.py: [PowerText] type definition
 # _*_ coding:utf8 _*_
 from exceptions import *
+from sys import setrecursionlimit
+
+setrecursionlimit(10000)
 
 class Base:
     _type = 'base'

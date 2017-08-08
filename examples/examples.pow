@@ -6,7 +6,6 @@
 ;; recursive Fibonacci sequence
 ;; /!\ very slow with big numbers...
 ;; if we consider 20 as a big number...
-;; todo: speed it up!
 [? [or [= n 0] [= n 1]]: 1;
 [+ [rfib [- n 1]] [rfib [- n 2]]]]]
 
@@ -51,13 +50,13 @@ f]
 [locate y 1]]
 
 [def simple [y x t]:
-[for [i 0 [1- [len t]]]:
+[for i 0 [1- [len t]]:
 [locate y [+ x i]] [echo (t:i)]
 [pause 0.018125]]]
 
 [def E []:
 [set e 2]
-[for [n 2 100]:
+[for n 2 100:
 [set e [+ e [/ 1 [fact n]]]]]
 e]
 
@@ -128,9 +127,9 @@ D]]]
   [def flower [y x]:
   [locate y x] [echo "( )"]
   [set L ("\\" "|" "/")]
-  [for [i 0 2]: [locate [- y 1] [+ x i]] [echo (L:i)] [pause 0.018125]]
+  [for i 0 2: [locate [- y 1] [+ x i]] [echo (L:i)] [pause 0.018125]]
   [reverse L]
-  [for [i 2 0 -1]: [locate [+ y 1] [+ x i]] [echo (L:i)] [pause 0.018125]]
+  [for i 2 0 -1: [locate [+ y 1] [+ x i]] [echo (L:i)] [pause 0.018125]]
   null]
 [hidecursor]
 [cls]
