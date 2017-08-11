@@ -109,7 +109,7 @@ def p_exit_statement(p):
     if len(p) == 4: p[0] = powast.Exit(powast.Null())
     else: p[0] = powast.Exit(p[3])
 
-def p_command_continue(p):
+def p_command_skip(p):
     """command : SKIP"""
     p[0] = powast.Skip()
 
