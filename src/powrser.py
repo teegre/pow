@@ -109,6 +109,10 @@ def p_exit_statement(p):
     if len(p) == 4: p[0] = powast.Exit(powast.Null())
     else: p[0] = powast.Exit(p[3])
 
+def p_command_continue(p):
+    """command : SKIP"""
+    p[0] = powast.Skip()
+
 def p_for_statement(p):
     """for_statement : LBRACKET FOR ID expr expr COLUMN statements RBRACKET
                      | LBRACKET FOR ID expr expr expr COLUMN statements RBRACKET"""
@@ -221,6 +225,14 @@ def p_command_set(p):
         p[0] = powast.Set(p[2], p[3])
     else:
         p[0] = powast.Set(p[3], p[7], p[5])
+
+def p_command_setg(p):
+    """command : SETG ID expr
+               | SETG LPAREN ID COLUMN expr RPAREN expr"""
+    if len(p) == 4:
+        p[0] = powast.Set(p[2], p[3], isglobal=True)
+    else:
+        p[0] = powast.Set(p[3], p[7], p[5], isglobal=True)
 
 def p_command_push(p):
     """command : PUSH ID sequence"""
