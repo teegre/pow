@@ -15,10 +15,12 @@ reserved = {
         'read'    : 'READ',     #   user input
         'expect'  : 'EXPECT',   #   check type
         'set'     : 'SET',      #OK variable assignation
+        'setg'    : 'SETG',     #   global variable assignation
         'del'     : 'DEL',      #OK variable / function deletion
         'for'     : 'FOR',      #OK for loop
         'while'   : 'WHILE',    #OK while statement
         'exit'    : 'EXIT',     #OK break statement
+        'skip'    : 'SKIP',     #
         'def'     : 'DEF',      #OK function definition
         'lambda'  : 'LAMBDA',   #OK lambda expression
 #        'defn'    : 'DEFN',     #   namespace definition

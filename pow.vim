@@ -18,7 +18,7 @@ syn match powNumber "[-]\d\+\.\d*"
 
 syn keyword powFunc and close del def echo filter getcur head input lambda
 syn keyword powFunc len map not open or pause pop push read read-file rnd
-syn keyword powFunc scrsize set tail time type uses write-file xor
+syn keyword powFunc scrsize set setg tail time type uses write-file xor
 
 syn match powId     "\v[a-zA-Z_][a-zA-Z0-9\-_]*"
 

@@ -1,9 +1,6 @@
 # typedef.py: [PowerText] type definition
 # _*_ coding:utf8 _*_
 from exceptions import *
-from sys import setrecursionlimit
-
-setrecursionlimit(10000)
 
 class Base:
     _type = 'base'
@@ -121,8 +118,8 @@ def listrepr(s):
 
 def addlist(s, t):
     if isnull(s): return t
-    if s.isempty(): return t
-    return List(s.head(), addlist(s.tail(), t))
+    elif s.isempty(): return t
+    else: return List(s.head(), addlist(s.tail(), t))
 
 class List(Base):
     """List type from scratch"""

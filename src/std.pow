@@ -137,12 +137,12 @@ L]]
 [def get-value [L key]:
 ;; get the value of a given key
 ;; ((key1 value1) (key2 value2) ... (keyN valueN)) 
-[? L:
+[? [and L [= [type L] list]]:
 [? [= key ([head L]:0)]: ([head L]:1); [get-value [tail L] key]];
 null]]
 
 [def get-pair [L key]:
-[? L:
+[? [and L [= [type L] list]]:
 [? [= key ([head L]:0)]: [head L]; [get-pair [tail L] key]];
 null]]
 
@@ -150,6 +150,11 @@ null]]
 [? [= [type L] list]:
 [? [set a [get-pair L key]]: [set (a:1) value];
 [push L (key value)]];
+null]]
+
+[def set-single-value [L index value]:
+[? [and L [= [type L] list]]:
+[set (L:index) value];
 null]]
 
 [def rndr [a b]:
@@ -188,10 +193,17 @@ result]]]
 [locate y x]
 [echo text]]
 
-[def clrline [y x]:
-;; clear a line
-[locate y x]
+[def clrtoeol []:
+;; clear from current pos. to end of line
 [echo "\x1b[K"]]
+
+[def clrtoeos []:
+;; clear from current pos. to end of screen
+[echo "\x1b[0J"]]
+
+[def clrline []:
+;; clear line at current pos.
+[echo "\x1b[2K"]]
 
 [def hidecursor []:
 [echo "\x1b[?25l"]]

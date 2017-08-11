@@ -23,7 +23,7 @@ class StatementList:
             children = []
         self.children = children
     def __repr__(self):
-        return f'[statements: {self.children}]'
+        return f'{self.children}'
     def __getitem__(self, index):
         return self.children[index]
     def __len__(self):
@@ -33,9 +33,13 @@ class StatementList:
     def eval(self):
         result = []
         for statement in self:
+            if isinstance(statement, Skip):
+                return statement
             if isinstance(statement, Exit):
                 return statement
             evaluated = statement.eval()
+            if isinstance(evaluated, Skip):
+                return evaluated
             if isinstance(evaluated, Exit):
                 return evaluated
             if evaluated is not None:
@@ -46,7 +50,7 @@ class Variable(Base):
     def __init__(self, name):
         self.name = name
     def __repr__(self):
-        return f'var: {self.name}'
+        return f'var {self.name}'
     def eval(self):
         return symbols.get_variable(self.name)
 
@@ -54,7 +58,7 @@ class Echo(Base):
     def __init__(self, params=None):
         self.params = params
     def __repr__(self):
-        return f'[echo: {self.params}]'
+        return f'[echo {self.params}]'
     def pprint(self, *elements):
         out = ''.join([str(item) for item in elements])
         stdout.write(out)
@@ -89,7 +93,7 @@ class Read(Base):
         except KeyboardInterrupt:
             print()
             print('*** read: interrupted by user')
-            return Exit(Null()) 
+            return Exit(Null())
 
 
 class Expect(Base):
@@ -120,21 +124,22 @@ class Get(Base):
             raise PowRuntimeError(f'*** invalid index: < {self.index.eval()} >')
 
 class Set(Base):
-    def __init__(self, name, value, index=None):
+    def __init__(self, name, value, index=None, isglobal=False):
         self.name = name
         self._value = value
         self.index = index
+        self.isglobal = isglobal
     def __repr__(self):
-        return f'[set: {self.name}<-{self._value}]'
+        return f'[set {self.name}<-{self._value}]'
     def __iter__(self):
         return iter(self._value)
     def eval(self):
         value = self._value.eval()
         if self.index is None:
             if isinstance(value, List):
-                result = symbols.set_variable(self.name, value.copy())
+                result = symbols.set_variable(self.name, value.copy(), is_global=self.isglobal)
             else:
-                result = symbols.set_variable(self.name, value)
+                result = symbols.set_variable(self.name, value, is_global=self.isglobal)
         else:
             result = symbols.set_item(self.name, self.index.eval(), value)
         return result
@@ -143,7 +148,7 @@ class Del(Base):
     def __init__(self, name):
         self.name = name
     def __repr__(self):
-        return f'[del: {self.name}]'
+        return f'[del {self.name}]'
     def eval(self):
         if symbols.is_function(self.name):
             return symbols.del_function(self.name)
@@ -151,12 +156,11 @@ class Del(Base):
             return symbols.del_variable(self.name)
 
 class MakeList(Base):
+    _type = 'list'
     def __init__(self, items):
         self.items = items
     def __repr__(self):
-        return f'[makelist: {tuple(self.items)}]'
-    def powtype(self):
-        return 'list'
+        return f'[list {tuple(self.items)}]'
     def eval(self):
         new_list = List()
         for item in self.items:
@@ -168,7 +172,7 @@ class Push(Base):
         self.list = _list
         self._value = value
     def __repr__(self):
-        return f'push: {self.list}<-{self._value}'
+        return f'[push {self.list}<-{self._value}]'
     def eval(self):
         _list = self.list.eval()
         try:
@@ -185,7 +189,7 @@ class Pop(Base):
         self.list = _list
         self.index = index
     def __repr__(self):
-        return f'[pop: {self.list}->{self.index}]'
+        return f'[pop {self.list}->{self.index}]'
     def eval(self):
         _list = self.list.eval()
         try:
@@ -197,7 +201,7 @@ class Head(Base):
     def __init__(self, _list):
         self.list = _list
     def __repr__(self):
-        return f'[head: {self.list}]'
+        return f'[head {self.list}]'
     def eval(self):
         try: return self.list.eval().head()
         except AttributeError:
@@ -207,27 +211,17 @@ class Tail(Base):
     def __init__(self, _list):
         self.list = _list
     def __repr__(self):
-        return f'[tail: {self.list}]'
+        return f'[tail {self.list}]'
     def eval(self):
         try: return self.list.eval().tail()
         except AttributeError:
             raise PowTypeError(f'*** tail: list expected, got {self.list.powtype()}')
 
-#class Last(Base):
-#    def __init__(self, _list):
-#        self.list = _list
-#    def __repr__(self):
-#        return f'[tail: {self.list}]'
-#    def eval(self):
-#        try: return self.list.eval().last()
-#        except AttributeError:
-#            raise PowTypeError(f'*** last: list expected, got {self.list.powtype()}')
-
 class Len(Base):
     def __init__(self, item):
         self.item = item
     def __repr__(self):
-        return f'[len: {self.item}]'
+        return f'[len {self.item}]'
     def eval(self):
         try: return len(self.item.eval())
         except TypeError:
@@ -237,7 +231,7 @@ class ToStr(Base):
     def __init__(self, item):
         self.item = item
     def __repr__(self):
-        return f'[tostr: {self.item}]'
+        return f'[tostr {self.item}]'
     def eval(self):
         if isinstance(self.item, Variable):
             item = ttype(self.item.eval())
@@ -248,7 +242,7 @@ class ToNum(Base):
     def __init__(self, item):
         self.item = item
     def __repr__(self):
-        return f'[tonum: {self.item}]'
+        return f'[tonum {self.item}]'
     def eval(self):
         if isinstance(self.item, Variable):
             item = ttype(self.item.eval())
@@ -268,7 +262,7 @@ class Filter(Base):
         self.expr = expr
         self.list = _list
     def __repr__(self):
-        return f'[filter: {self.expr}->{self.list}]'
+        return f'[filter {self.expr}->{self.list}]'
     def eval(self):
         _list = self.list.eval()
         if not isinstance(_list, List):
@@ -284,7 +278,7 @@ class Map(Base):
         self.expr = expr
         self.list = _list
     def __repr__(self):
-        return f'[map: {self.expr}->{self.list}]'
+        return f'[map {self.expr}->{self.list}]'
     def eval(self):
         _list = self.list.eval()
         if not isinstance(_list, List):
@@ -295,7 +289,7 @@ class Type(Base):
     def __init__(self, item):
         self.item = item
     def __repr__(self):
-        return f'[type: {self.item}]'
+        return f'[type {self.item}]'
     def eval(self):
         if isinstance(self.item, Variable):
             return ttype(self.item.eval()).powtype()
@@ -322,7 +316,7 @@ class BinOp(Base):
         self.b  = b
         self.op = op
     def __repr__(self):
-        return f'[{self.op}: {self.a} {self.b}]'
+        return f'[{self.op} {self.a} {self.b}]'
     def eval(self):
         try:
             a = self.a
@@ -342,7 +336,7 @@ class Pow2(Base):
     def __init__(self, value):
         self.value = value
     def __repr__(self):
-        return f'[**: {self.value}]'
+        return f'[** {self.value}]'
     def eval(self):
         return operator.pow(self.value.eval(), 2)
 
@@ -351,7 +345,7 @@ class Or(Base):
         self.a = a
         self.b = b
     def __repr__(self):
-        return f'[or: {self.a} {self.b}]'
+        return f'[or {self.a} {self.b}]'
     def eval(self):
         a = self.a.eval()
         b = self.b.eval()
@@ -364,7 +358,7 @@ class And(Base):
         self.a = a
         self.b = b
     def __repr__(self):
-        return f'[and: {self.a} {self.b}]'
+        return f'[and {self.a} {self.b}]'
     def eval(self):
         a = self.a.eval()
         b = self.b.eval()
@@ -377,7 +371,7 @@ class XOr(Base):
         self.a = a
         self.b = b
     def __repr__(self):
-        return f'[xor: {self.a} {self.b}]'
+        return f'[xor {self.a} {self.b}]'
     def eval(self):
         a = self.a.eval()
         b = self.b.eval()
@@ -389,7 +383,7 @@ class Not(Base):
     def __init__(self, a):
         self.a = a
     def __repr__(self):
-        return f'[not: {self.a}]'
+        return f'[not {self.a}]'
     def eval(self):
         a = self.a.eval()
         if isinstance(a, Bool): a = a.eval()
@@ -414,7 +408,7 @@ class IncDec(Base):
         self.op = op
         self.name = name
     def __repr__(self):
-        return f'[{self.op}: {self.name}]'
+        return f'[{self.op} {self.name}]'
     def eval(self):
         value = symbols.get_variable(self.name)
         if value is not None:
@@ -447,7 +441,7 @@ class Pause(Base):
     def __init__(self, duration):
         self.duration = duration
     def __repr__(self):
-        return f'[pause: {self.duration}]'
+        return f'[pause {self.duration}]'
     def eval(self):
         sleep(self.duration.eval())
         return Null()
@@ -459,19 +453,19 @@ class If(Base):
         self.dothat = dothat
     def __repr__(self):
         if self.dothat is not None:
-            return f'[?: [{self.condition}]: {self.dothis}; {self.dothat}]'
+            return f'[? {self.condition}: {self.dothis}; {self.dothat}]'
         else:
-            return f'[?: [{self.condition}]: {self.dothis}]'
+            return f'[? {self.condition}: {self.dothis}]'
     def eval(self):
         if self.condition.eval():
             result = self.dothis.eval()
-            if isinstance(result, Exit):
+            if isinstance(result, (Exit, Skip)):
                 return result
             try: return result[-1]
             except: return Null()
         elif self.dothat is not None:
             result = self.dothat.eval()
-            if isinstance(result, Exit):
+            if isinstance(result, (Exit, Skip)):
                 return result
             try: return result[-1]
             except: return Null()
@@ -483,21 +477,31 @@ class Exit(Base):
         return []
     def __repr__(self):
         if self._value:
-            return f'[exit: {self.value}]'
+            return f'[exit {self.value}]'
         else: return '[exit]'
     def eval(self):
         return self._value.eval()
+
+class Skip(Base):
+    def __repr__(self):
+        return '[skip]'
+    def __iter__(self):
+        return []
+    def eval(self):
+        return Null()
 
 class While(Base):
     def __init__(self, condition, dothis):
         self.condition = condition
         self.dothis = dothis
     def __repr__(self):
-        return f'[while: condition [{self.condition}]: body={self.dothis}]'
+        return f'[while {self.condition}: {self.dothis}]'
     def eval(self):
         try:
             while self.condition.eval():
                 result = self.dothis.eval()
+                if isinstance(result, Skip):
+                    continue
                 if isinstance(result, Exit):
                     return result.eval()
         except KeyboardInterrupt:
@@ -512,7 +516,7 @@ class For(Base):
         self.step = step
         self.dothis = dothis
     def __repr__(self):
-        return(f'[for: [{self.var} {self.a} {self.b} {self.step}]: {self.dothis}]')
+        return(f'[for {self.var} {self.a} {self.b} {self.step}: {self.dothis}]')
     def eval(self):
         try:
             a = self.a
@@ -528,6 +532,8 @@ class For(Base):
             while BinOp(op, i, b).eval():
                 setvar.eval()
                 result = body.eval()
+                if isinstance(result, Skip):
+                    continue
                 if isinstance(result, Exit):
                     return result.eval()
                 setvar = Set(var, BinOp('+', i, step))
@@ -543,7 +549,7 @@ class Is(Base):
     def __init__(self, value):
         self._value = value
     def __repr__(self):
-        return f'[??: {self._value}]'
+        return f'[?? {self._value}]'
     def eval(self):
         return is_(self._value.eval())
 
@@ -554,7 +560,7 @@ class Def(Base):
         self.params = params
         self.body = body
     def __repr__(self):
-        return f'[def: {self.name} {self.params}: {self.body}]'
+        return f'[def {self.name} {self.params}: {self.body}]'
     def eval(self):
         symbols.set_function(self.name, self.params, self.body)
         return f'[{self.name}]'
@@ -565,7 +571,7 @@ class FunctionCall(Base):
         self.name = name
         self.params = params
     def __repr__(self):
-        return f'[function call: [{self.name} {self.params}]]'
+        return f'[{self.name} {self.params}]'
     def eval(self):
         func = symbols.get_function(self.name)
         params = func[0]
@@ -592,7 +598,7 @@ class LambdaCall(Base):
         self.f = f
         self.params = params
     def __repr__(self):
-        return f'[lambda call: {self.f} {self.params}]'
+        return f'[@{self.f} {self.params}]'
     def eval(self, params=None):
         if params is not None: self.params = params
         f = self.f.eval()
@@ -619,20 +625,24 @@ class Uses(Base):
         self.module = module
         self.parser = parser
     def __repr__(self):
-        return f'[use: {self.module}]'
+        return f'[uses {self.module}]'
     def eval(self):
-        module = self.module + '.pow'
-        if isfile(module):
-            with open(module, 'r') as f:
-                lines = ''.join(f.readlines())
-            instructions = self.parser.parse(lines)
-            instructions.eval()
-        else:
-            raise PowModuleNotFound(f'*** uses: module {self.module} not found.')
+        try:
+            module = self.module + '.pow'
+            if isfile(module):
+                with open(module, 'r') as f:
+                    lines = ''.join(f.readlines())
+                instructions = self.parser.parse(lines)
+                instructions.eval()
+            else:
+                raise PowModuleNotFound(f'*** uses: module {self.module} not found.')
+        except Exception as e:
+            print(e)
+            return Null()
 
 class ScreenSize(Base):
     def __repr__(self):
-        return '[screensize]'
+        return '[scrsize]'
     def eval(self):
         from os import get_terminal_size
         size = get_terminal_size(stdout.fileno())
@@ -640,7 +650,7 @@ class ScreenSize(Base):
 
 class GetCursor(Base):
     def __repr__(self):
-        return '[getcursor]'
+        return '[getcur]'
     def eval(self):
         """Get cursor position."""
         from termios import tcgetattr, tcsetattr, CREAD, ECHO, ICANON, TCSADRAIN

@@ -61,6 +61,8 @@ def main():
             print(e)
             if tb: traceback.print_exc()
             parser.restart()
+        finally:
+            parser.parse('[all-off]').eval()
     return 1
 
 if __name__ == '__main__':

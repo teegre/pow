@@ -35,8 +35,8 @@ class Symbols:
         table = self.table[self.__localfunc]
         return table[len(table) -1]
 
-    def set_variable(self, name, value):
-        if self.islocal():
+    def set_variable(self, name, value, is_global=False):
+        if self.islocal() and not is_global:
             self.get_local_table()[name] = value
         else:
             self.table[self.__vars][name] = value
