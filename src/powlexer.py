@@ -19,8 +19,8 @@ reserved = {
         'del'     : 'DEL',      #OK variable / function deletion
         'for'     : 'FOR',      #OK for loop
         'while'   : 'WHILE',    #OK while statement
-        'exit'    : 'EXIT',     #OK break statement
-        'skip'    : 'SKIP',     #
+        'exit'    : 'EXIT',     #OK exit statement
+        'skip'    : 'SKIP',     #OK skip statement
         'def'     : 'DEF',      #OK function definition
         'lambda'  : 'LAMBDA',   #OK lambda expression
 #        'defn'    : 'DEFN',     #   namespace definition
@@ -40,6 +40,8 @@ reserved = {
         'tostr'   : 'TOSTR',    #
         'tonum'   : 'TONUM',    #
         'uses'    : 'USES',     #   module import
+        'char'    : 'CHAR',     #
+        'ord'     : 'ORD',      #
         'getcur'  : 'GETCUR',   #   cursor position
         'scrsize' : 'SCRSIZE',  #   screen size
         'time'    : 'TIME',    #OK

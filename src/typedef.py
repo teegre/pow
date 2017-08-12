@@ -243,6 +243,9 @@ class Lambda(Base):
 def isnull(value):
     return isinstance(value, Null)
 
+def isfunction(value):
+    return isinstance(value, (FunctionCall, Def))
+
 def islambda(value):
     return isinstance(value.eval(), Lambda)
 

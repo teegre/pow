@@ -218,6 +218,14 @@ def p_command_tonum(p):
     """command : TONUM expr"""
     p[0] = powast.ToNum(p[2])
 
+def p_command_char(p):
+    """command : CHAR expr"""
+    p[0] = powast.Char(p[2])
+
+def p_command_ord(p):
+    """command : ORD expr"""
+    p[0] = powast.Ord(p[2])
+
 def p_command_set(p):
     """command : SET ID expr
                | SET LPAREN ID COLUMN expr RPAREN expr"""

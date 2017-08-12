@@ -228,26 +228,26 @@ class Len(Base):
             raise PowTypeError(f'*** len: {self.item.powtype()} has no length')
 
 class ToStr(Base):
-    def __init__(self, item):
-        self.item = item
+    def __init__(self, value):
+        self._value = value
     def __repr__(self):
-        return f'[tostr {self.item}]'
+        return f'[tostr {self._value}]'
     def eval(self):
-        if isinstance(self.item, Variable):
-            item = ttype(self.item.eval())
-        else: item = self.item
-        return item.tostr()
+        if isinstance(self._value, (Variable, FunctionCall, LambdaCall)):
+            value = ttype(self._value.eval())
+        else: value = self._value
+        return value.tostr()
 
 class ToNum(Base):
-    def __init__(self, item):
-        self.item = item
+    def __init__(self, value):
+        self._value = value
     def __repr__(self):
-        return f'[tonum {self.item}]'
+        return f'[tonum {self._value}]'
     def eval(self):
-        if isinstance(self.item, Variable):
-            item = ttype(self.item.eval())
-        else: item = self.item
-        return item.tonum()
+        if isinstance(self._value, (Variable, FunctionCall, LambdaCall)):
+            value = ttype(self._value.eval())
+        else: value = self._value
+        return value.tonum()
 
 def filter_list(expr, _list):
     if isnull(_list): return _list
@@ -434,8 +434,27 @@ class Time(Base):
         tz = int(strftime('%z'))
         tzh = tz // 100
         tzm = tz % 100
-
         return time() + (tzh * 3600) + (tzm * 60)
+
+class Char(Base):
+    def __init__(self, value):
+        self._value = value
+    def __repr__(self):
+        return f'[char {self._value}]'
+    def eval(self):
+        try: return chr(self._value.eval())
+        except TypeError:
+            raise PowTypeError(f'*** char: number expected, got {self._value.powtype()}')
+
+class Ord(Base):
+    def __init__(self, value):
+        self._value = value
+    def __repr__(self):
+        return f'[ord {self._value}]'
+    def eval(self):
+        try: return ord(self._value.eval())
+        except TypeError:
+            raise PowTypeError(f'*** ord: string of length 1 expected, got {self._value.powtype()}')
 
 class Pause(Base):
     def __init__(self, duration):
