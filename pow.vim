@@ -24,8 +24,8 @@ syn match powOp   "<="
 syn match powOp   ">"
 syn match powOp   ">="
 syn match powOp   "!="
-syn match powOp   "/"
-syn match powOp   "//"
+syn match powOp   "\v//"
+syn match powOp   "\v/"
 syn match powOp   "%"
 
 syn keyword powFunc and		char	close	def	del	echo	expect	filter	getcur	head	input
@@ -54,13 +54,14 @@ syn keyword powStatement set  nextgroup=powID skipwhite
 syn match   powLambda   "\v\@[a-zA-Z_][a-zA-Z0-9-_]*"
 syn keyword powLambdaCall @ nextgroup=powLambda skipwhite
 
-syn match powOp   "\v1\v\+"
-syn match powOp   "\v1\v-"
-
 syn match powNumber "\<\d\+"
 syn match powNumber "[-]\d\+"
 syn match powNumber "\<\d\+\.\d*"
 syn match powNumber "[-]\d\+\.\d*"
+
+syn match powOp   "\v1\v\+"
+syn match powOp   "\v1\v-"
+
 
 syn sync lines=100
 
