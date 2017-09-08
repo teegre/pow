@@ -1,0 +1,238 @@
+;; CANDY ROULETTE [PowerText] Version
+
+[def player-number []:
+;; ask for number of players
+[set trial 3]
+[while true:
+[? [= trial 0]: [exit 0]]
+[set n [expect number [tonum [read "> how many players (2-6): "]]]]
+[? [and [> n 1] [< n 7]]: [exit n]; [echo "* invalid input\n"] [-- trial]]]]
+
+[def player-name [n]:
+;; ask for player's names
+[set name [read "> player #" n " name: "]]
+[? [= name ""]: [exit 0]; name]]
+
+[def player-init []:
+;; game initialization
+[set names ()]
+[set players ()]
+[set n [player-number]]
+[? [= n 0]: [exit 0];
+[echo "> tip: names must start with * for non human player\n"]
+[for i 1 n:
+[set name [ucase [player-name i]]]
+[? [= name 0]: [exit 0];
+[push names name]
+[set-value players name 1000]]]]
+(names players)]
+
+[def play-computer-turn [name wallet]:
+;; computer's turn
+[set num [rndr 0 50]]
+;;behaviour
+[set behaviour [rndr 1 10]]
+[? [= behaviour 10]: [set bid wallet];
+[? [= behaviour 2]: [set bid [// wallet 2]];
+[? [= behaviour 3]: [set bid [// wallet 3]];
+[? [= behaviour 4]: [set bid [// wallet 4]];
+[set bid [// wallet 10]]]]]]
+[? [= bid 0]: [set bid wallet]]
+(num bid)]
+
+[def play-human-turn [name wallet]:
+;; human's turn
+[set continue true]
+[echo "> tip: enter 99 and computer will pick a number for you\n"]
+[while continue:
+[set num [expect number [tonum [read "> " name " [0..49]: "]]]]
+[? [or [and [>= num 0] [<= num 50]] [= num 99]] : [set continue false];
+[echo "* invalid input, try again\n"]]]
+[? [= num 99]: [echo "> " [set num [rndr 0 50]] " <\n"]]
+[set continue true]
+[echo "> tip: enter 0 for all in\n"]
+[while continue:
+[set bid [expect number [tonum [read "> " name " [" wallet "]: "]]]]
+[? [and [>= bid 0] [<= bid wallet]]: [set continue false];
+[echo "* invalid input, try again\n"]]]
+[? [= bid 0]: [set bid wallet]]
+(num bid)]
+
+[def print-score [L]:
+;; print players and scores
+[echo "| "]
+[set l [1- [len L]]]
+[for i 0 l:
+[echo ((L:i):0) ": " ((L:i):1) " | "]]
+[echo]]
+
+[def check-robots [names]:
+;; check if all remaining players are robots
+[set robots true]
+[for i 0 [1- [len names]]:
+[? [not [= ((names:i):0) "*"]]: [set robots false]]]
+robots]
+
+[def roulette []:
+[hidecursor]
+[set force [rndr 2 4]]
+[set speed [* force 10]]
+[set cursor [rndr 0 49]]
+[while [> speed 1]:
+  [++ cursor]
+  [? [> cursor 49]: [set cursor 0]]
+  [locate [cury] 1]
+  [? [> cursor 9]:
+    [echo "> " cursor " <"];
+    [echo ">  " cursor " <"]]
+  [pause [/ 1 speed]]
+  [set speed [? [> speed 50]:
+    [- speed 2];
+    [? [and [< speed 50] [> speed 15]]:
+      [- speed 0.5];
+      [? [< speed 15]:
+        [- speed 0.25];
+        [- speed 0.125]]]]]]
+[showcursor]
+[echo "\n"]
+cursor]
+
+[def rules []:
+[cls]
+[echo "* CANDY ROULETTE *\n"][pause 0.5]
+[echo][pause 0.25]
+[echo "* game rules:\n"][pause 0.5]
+[echo "* pick a number\n"][pause 0.5]
+[echo "* choose your bid\n"][pause 0.5]
+[echo "* each player starts with 1000 candies\n"][pause 0.5]
+[echo][pause 0.25]
+[echo "* right number : bid x 10\n"][pause 0.5]
+[echo "* right color  : bid x 2\n"][pause 0.5]
+[echo][pause 0.25]
+[echo "* lost candies go in the jar.\n"][pause 0.5]
+[echo "* if only one winner, also wins what's in the jar!\n"][pause 0.5]]
+
+[def print-text [text]:
+[set y [cury]] [set x [curx]]
+[for i 0 [1- [len text]]:
+[locate y [+ x i]]
+[echo (text:i)]
+[pause 0.00625]]
+null]
+
+[def play []:
+;; start game
+;; players initialization
+[cls]
+[uses datetime]
+[? [set L [player-init]]:
+[set continue true]
+[set robot-mode false]
+[set names [rndl (L:0)]]
+[set players (L:1)]
+[set jar 0]
+[set turn 1]
+[set n [1- [len names]]]
+# player order changes at the end of each turn
+# 1 2 3, 2 3 1 , 3 1 2...
+[set swap [lambda [L]: [? [> [len L] 1]: [push L [pop L 0]]]]]
+[set print-duration [lambda []: [echo " | " [time-to-str [sec-to-minsec [- [time] start-time]]]]]]
+;; main loop
+[set start-time [time]]
+[while [and [> n 0] continue]:
+  [cls]
+  [print-score players]
+  [echo "| jar: " jar " | round #" turn [@print-duration] "\n\n"]
+  [pause 1]
+  [set bids ()]
+  [for i 0 n:
+    [set name (names:i)]
+    [set wallet [get-value players name]]
+    [? [= (name:0) "*"]: #name starting by "*" are computer managed
+    [set bid [play-computer-turn name wallet]]
+    [set-value bids name bid]
+    [hidecursor]
+    [echo "> " name " plays: " [pause 0.75] (bid:0) [pause 0.5] " and " [pause 1] (bid:1)]
+    [? [= wallet (bid:1)]: [echo " | ALL-IN |\n"]; [echo "\n"]]
+    [pause 1]
+    [showcursor];
+    [set bid [play-human-turn name wallet]]
+    [set-value bids name bid]
+    [? [= wallet (bid:1)]: [echo "> ALL-IN\n"]]]]
+  [pause 1]
+  ;; number animation
+  [echo]
+  [set result [roulette]]
+  [echo]
+  [pause 1]
+  ;; check results
+  [set winner ()]
+  [for i 0 n:
+    [set name (names:i)]
+    [set wallet [get-value players name]]
+    [set bid [get-value bids name]]
+    [? [= (bid:0) result]:
+      [set text1 [+ "!! " [+ name " FOUND THE RIGHT NUMBER!! \n"]]]
+      [set text2 [+ "!! " [+ name [+ " WINS " [+ [tostr [* (bid:1) 10]] " CANDIES!! \n"]]]]]
+      [attr "reverse"] [echo [print-text text1]] [attr "reverse off"]
+      [attr "reverse"] [echo [print-text text2]] [attr "reverse off"]
+      [push winner name]
+      [set-value players name [+ wallet [* (bid:1) 10]]];
+      [? [= [% (bid:0) 2] [% result 2]]:
+        [echo "++ " name " found the right color!\n"]
+        [echo "++ " name " wins " [* (bid:1) 2] " candies \n"]
+        [push winner name]
+        [set-value players name [+ wallet [* (bid:1) 2]]];
+        [echo "-- bad luck for " name "...\n"]
+        [set jar [+ jar (bid:1)]]
+        [set-value players name [- wallet (bid:1)]]]]
+    [pause 1.5]]
+  [? [and [= [len winner] 1] [not [isempty winner]]]:
+    [echo ">> oh! " (winner:0) " also wins the jar!\n"]
+    [echo "++ " jar " candies!!\n"]
+    [set wallet [get-value players (winner:0)]]
+    [pause 1.5]
+    [set-value players (winner:0) [+ wallet jar]]
+    [set jar 0]]
+  ;; check loser / winner
+  [set loser ()]
+  [for i 0 n:
+    [? [= [get-value players (names:i)] 0]:
+      [echo "-- goodbye " (names:i) "\n"]
+      [pause 1]
+      [push loser i]]]
+  [? [not [isempty loser]]:
+    [for i [1- [len loser]] 0 -1: [pop names (loser:i)]]]
+  [? [isempty names]:
+    [echo "-- no winner this time...\n"]
+    [pause 1]
+    [set continue false]
+    [exit 0];
+    [? [= [len names] 1]:
+      [echo]
+      [echo "!! and the winner is... " (names:0) "!!\n"]
+      [echo "!! " [get-value players (names:0)] " candies!!\n"]
+      [pause 1]
+      [? [> jar 0]:
+        [echo "-- but still " jar " candies in the jar... \n"]]
+    [set continue false];
+    [echo]
+    [set n [1- [len names]]]
+    [set robot-mode [check-robots names]]
+    [print-score players]
+    [echo "| jar: " jar [@print-duration] "\n"]
+    [@swap names]
+    [++ turn]
+    [? [not robot-mode]:
+      [set continue [not [?? [read "> continue ? (any key + enter to stop): "]]]];
+      [pause 2]]]]]]
+[echo]
+[print-score players]
+[echo "| jar: " jar [@print-duration] "\n"]
+[echo]
+[echo "> thank you for playing!\n"]
+[echo "> see you next time!\n"]]
+
+[echo "> candy roulette [PowerText] version\n"]
+[echo "> enter [rules] to read how to play\n"]
+[echo "> enter [play] to start the game!\n"]
