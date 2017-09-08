@@ -47,10 +47,11 @@ class StatementList:
         return result
 
 class Variable(Base):
+    _type = 'variable'
     def __init__(self, name):
         self.name = name
     def __repr__(self):
-        return f'var {self.name}'
+        return f'{self.name}'
     def eval(self):
         return symbols.get_variable(self.name)
 
@@ -142,7 +143,7 @@ class Set(Base):
                 result = symbols.set_variable(self.name, value, is_global=self.isglobal)
         else:
             result = symbols.set_item(self.name, self.index.eval(), value)
-        return result
+        return ttype(result)
 
 class Del(Base):
     def __init__(self, name):
@@ -217,6 +218,16 @@ class Tail(Base):
         except AttributeError:
             raise PowTypeError(f'*** tail: list expected, got {self.list.powtype()}')
 
+class Clear(Base):
+    def __init__(self, _list):
+        self.list = _list
+    def __repr__(self):
+        return f'[clear {self.list}]'
+    def eval(self):
+        try: return self.list.eval().clear()
+        except AttributeError:
+            raise PowTypeError(f'*** clear: list expected, got {ttype(self.list.eval()).powtype()}')
+
 class Len(Base):
     def __init__(self, item):
         self.item = item
@@ -248,6 +259,29 @@ class ToNum(Base):
             value = ttype(self._value.eval())
         else: value = self._value
         return value.tonum()
+
+class ToFrac(Base):
+    def __init__(self, value):
+        self._value = value
+    def __repr__(self):
+        return f'[tofrac {self._value}]'
+    def eval(self):
+        if isinstance(self._value, (Variable, FunctionCall, LambdaCall)):
+            value = ttype(self._value.eval())
+        else: value = self._value
+        return Fraction.tofrac(value)
+
+class Cal(Base):
+    _type = 'frac'
+    def __init__(self, value):
+        self._value = value
+    def __repr__(self):
+        return f'[cal {self._value}]'
+    def eval(self):
+        if isinstance(self._value, (Variable, FunctionCall, LambdaCall)):
+            value = ttype(self._value.eval())
+        else: value = self._value
+        return value.cal()
 
 def filter_list(expr, _list):
     if isnull(_list): return _list
@@ -310,6 +344,8 @@ class BinOp(Base):
             '<'   : operator.lt,
             '<='  : operator.le,
             '***' : operator.pow,
+            '<<'  : operator.lshift,
+            '>>'  : operator.rshift,
     }
     def __init__(self, op, a, b):
         self.a  = a
@@ -322,10 +358,9 @@ class BinOp(Base):
             a = self.a
             b = self.b
             op = self.__op[self.op]
-            if self.op == '//': return int(op(a.eval(), b.eval()))
             return op(a.eval(), b.eval())
         except TypeError:
-            raise PowTypeError(f'*** {self.op} < {a} > < {b} >: unable to perform operation.')
+            raise PowTypeError(f'*** {self.op} < {a} > < {b} >: unable to perform operation.\n*** {a} = {a.eval()} {b} = {b.eval()}\n*** {type(a.eval())} {type(b.eval())}')
             return Null()
         #except Exception as e: raise PowRuntimeError(e)
     @property
@@ -334,11 +369,11 @@ class BinOp(Base):
 
 class Pow2(Base):
     def __init__(self, value):
-        self.value = value
+        self._value = value
     def __repr__(self):
-        return f'[** {self.value}]'
+        return f'[** {self._value}]'
     def eval(self):
-        return operator.pow(self.value.eval(), 2)
+        return operator.pow(self._value.eval(), 2)
 
 class Or(Base):
     def __init__(self, a, b):
@@ -391,16 +426,16 @@ class Not(Base):
 
 class Negative(Base):
     def __init__(self, value):
-        self.value = value
+        self._value = value
     def __repr__(self):
-        return f'-{self.value}'
+        return f'-{self._value}'
     def eval(self):
         try:
-            if isinstance(self.value, (Variable, Number)): value = self.value.eval()
-            else: value = self.value
+            if isinstance(self._value, (Variable, Number)): value = self._value.eval()
+            else: value = self._value
             return -value
         except TypeError:
-            raise PowTypeError(f'*** -{self.value}: number expected, got {self.value.powtype}')
+            raise PowTypeError(f'*** -{self._value}: number expected, got {self._value.powtype}')
         except Exception as e: raise PowRuntimeError(e)
 
 class IncDec(Base):
@@ -496,7 +531,7 @@ class Exit(Base):
         return []
     def __repr__(self):
         if self._value:
-            return f'[exit {self.value}]'
+            return f'[exit {self._value}]'
         else: return '[exit]'
     def eval(self):
         return self._value.eval()
@@ -579,7 +614,15 @@ class Def(Base):
         self.params = params
         self.body = body
     def __repr__(self):
-        return f'[def {self.name} {self.params}: {self.body}]'
+        params = ''
+        for param in self.params:
+            params += str(param) + ' '
+        params = params[0:-1]
+        body = ''
+        for stmt in self.body:
+            body += str(stmt) + ' '
+        body = body[0:-1]
+        return f'[def {self.name} [{params}]: {body}]'
     def eval(self):
         symbols.set_function(self.name, self.params, self.body)
         return f'[{self.name}]'
@@ -590,7 +633,11 @@ class FunctionCall(Base):
         self.name = name
         self.params = params
     def __repr__(self):
-        return f'[{self.name} {self.params}]'
+        params = ''
+        for param in self.params:
+            params += str(param) + ' '
+        params = params[0:-1]
+        return f'[{self.name} {params}]'
     def eval(self):
         func = symbols.get_function(self.name)
         params = func[0]
@@ -617,7 +664,11 @@ class LambdaCall(Base):
         self.f = f
         self.params = params
     def __repr__(self):
-        return f'[@{self.f} {self.params}]'
+        params = ''
+        for param in self.params:
+            params += str(param) + ' '
+        params = params[0:-1]
+        return f'[@{self.name} {params}]'
     def eval(self, params=None):
         if params is not None: self.params = params
         f = self.f.eval()
