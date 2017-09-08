@@ -1,0 +1,13 @@
+[def guess []:
+[set m [rndr 50 100]]
+[set n [rndr -m [+ m m]]]
+[set a null]
+[set c 0]
+[while [!= a n]:
+[++ c]
+[set a [expect number [tonum [read "(" c ") " "[" -m "..." m "?] "]]]]
+[? [= a null]: [-- c];
+[? [< a n]: [echo a " >>>\n"];
+[? [> a n]: [echo "<<< " a "\n"]]]]]
+[? [!= a null]: [echo "(" c ") " "=== " n "\n"]]]
+
