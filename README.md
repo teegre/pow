@@ -12,12 +12,14 @@
 
 ## 2. Types
 
-> There are five types in [PowerText]:
+> There are seven types in [PowerText]:
 
 * **string**: "Abc" or 'Abc'
-* **number**: 123, 123.456 (integer or float)
-* **list**: (1 2 3) ("a" "b" "c")
-* **bool**: true, false
+* **int**: `123`
+* **real**: `123.45`
+* **frac**: `22/7 [1+ [sqrt 5]]/2`
+* **list**: `(1 2 3) ("a" "b" "c")`
+* **bool**: `true false`
 * **null**
 
 > Types can be checked using the `[type]` function.
@@ -235,8 +237,8 @@ For lists contained in a list:
 ### 6.2 Other list functions
 
 * **sort**: sort a list (in place).
-* **reverse**: reverse list order.
-* **rndl**: randomize a list.
+* **reverse**: reverse list order (in place).
+* **rndl**: return randomized list.
 * **index**: return index of an element in a list
 
     `[index my-list 3]`
@@ -297,27 +299,16 @@ my-hashtable2
 ( ( "peter" ( "AH" "10S" "3C" "9S" ) ) ( "jane" ( "KD" "2H" "7C" "4S" ) ) )
 ```
 
+## 7. Fractions
 
+Any expression can be used for numerator or denominator, such as variables or functions.
+Variables don't need to be instanciated to any number when using a fraction.
 
+Example:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+```
+[set f x/[** x]]
+[for x 1 10:
+  [echo "x=" x "f(x)=" [cal f]]]
+```
 

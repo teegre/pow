@@ -13,7 +13,7 @@ def main():
         try:
             stop = False
             parser.lineno = 1
-            s = input('[→] ')
+            s = input('::: ')
             if s == 'noeval':
                 noeval = not noeval
                 print('noeval:', powast.Bool(noeval))
@@ -39,7 +39,7 @@ def main():
                         continue
             if stop: continue
             else: s += '\n'
-        except EOFError:
+        except (EOFError, SystemExit):
             print()
             break
         except KeyboardInterrupt:
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     print('█████████████ █████████████ ███   ███   ███'); sleep(0.0625)
     print('██         ██ ██         ██ ███   ███   ███'); sleep(0.0625)
     print('█████████████ █████████████ ███████████████'); sleep(0.0625)
-    print('██[PowerText] version 0.0.2  ---  (07-2017)'); sleep(0.0625)
+    print('██[PowerText] version 0.0.5  ---  (08-2017)'); sleep(0.0625)
     print('REPL: hello?')
     main()
     print('REPL: bye?')

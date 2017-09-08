@@ -1,6 +1,4 @@
-;; [PowerText] Standard Library
-
-[set _pi_ 3.141592653589793]
+;; [PowerText] Standard Library.
 
 [def isnull [a]:
 [= a null]]
@@ -10,6 +8,16 @@
 
 [def isempty [a]:
 [or [= a ""] [= a ()]]]
+
+[def ilen [n]:
+;; return number of digits in an integer
+;; or return length of element if n is not an integer
+[? [and [!= [type n] int] [!= [type n] real]]: [len n];
+[set count 0]
+[while n:
+[set n [// n 10]]
+[++ count]]
+count]]
 
 [def tolist [S]:
 ;; convert a string to a list
@@ -27,7 +35,8 @@ L]
 
 [def index [L item]:
 ;; get the index of an item in a list
-[? [or [isnull L] [isnull item]]: null;
+[set l null]
+[? [or [not L] [not item]]: null;
 [set idx 0]
 [set l L]
 [while [!= l null]:
@@ -38,12 +47,14 @@ L]
 [? [isnull l]: null; idx]]
 
 [def fact [n]:
-  [def fact-tail [n prod]:
+;; factorial
+  [def fact-t [n prod]:
   [? [= n 0]: prod;
-  [fact-tail [- n 1] [* n prod]]]]
-[fact-tail n 1]]
+  [fact-t [- n 1] [* n prod]]]]
+[fact-t n 1]]
 
 [def sum [L]:
+;; return the sum of elements in a list
 [? L:
 [+ [head L] [sum [tail L]]];
 0]]
@@ -53,11 +64,20 @@ L]
 [? L: [+ [= item [head L]] [count item [tail L]]]; 0]]
 
 [def in [a b]:
+;; return true if a is in b, false otherwise
+;; b can be a list or a string
+[? [= [type b] list]:
 [? [not b]: false;
 [? [= a [head b]]: true;
-[in a [tail b]]]]]
+[in a [tail b]]]];
+[? [= [type b] string]:
+[def string-tail [s]: [set T ""] [for i 0 [1- [len s]]: [? i: [set T [+ T (s:i)]]]] T]
+[? [not b]: false;
+[? [= a (b:0)]: true;
+[in a [str-tail b]]]]]]] 
 
 [def abs [x]:
+;; absolute value
 [? [>= x 0]: x; -x]]
 
 [def range [a b]:
@@ -113,7 +133,7 @@ L]]
 
 [def reverse [L]:
 ;; reverse order of a list (in place)
-[? [isnull L]: null;
+[? [not L]: null;
 [set i 0]
 [set j [1- [len L]]]
 [while [< i j]:
@@ -149,13 +169,44 @@ null]]
 [def set-value [L key value]:
 [? [= [type L] list]:
 [? [set a [get-pair L key]]: [set (a:1) value];
-[push L (key value)]];
+[push L (key value)]]
+value;
 null]]
 
 [def set-single-value [L index value]:
 [? [and L [= [type L] list]]:
-[set (L:index) value];
+[set (L:index) value]
+value;
 null]]
+
+[def push-value [L key value]:
+[? [= [type L] list]:
+[? [set a [get-pair L key]]: [push (a:1) value];
+[push L (key (value))]]
+value;
+null]]
+
+[def ucase [S]:
+;; convert a lowercase string to uppercase.
+[? [and S [= [type S] string]]:
+  [set s ""]
+  [for i 0 [1- [len S]]:
+    [? [or [in [ord (S:i)] [range 97 122]] [or [in [ord (S:i)] [range 224 246]] [in [ord (S:i)] [range 248 252]]]]:
+      [set s [+ s [char [- [ord (S:i)] 32]]]];
+      [set s [+ s (S:i)]]]]
+  s;
+  S]]
+    
+[def lcase [S]:
+;; convert an uppercase string to lowercase.
+[? [and S [= [type S] string]]:
+  [set s ""]
+  [for i 0 [1- [len S]]:
+    [? [or [in [ord (S:i)] [range 65 90]] [or [in [ord (S:i)] [range 192 214]] [in [ord (S:i)] [range 216 220]]]]:
+      [set s [+ s [char [+ [ord (S:i)] 32]]]];
+      [set s [+ s (S:i)]]]]
+  s;
+  S]]
 
 [def rndr [a b]:
 ;; return an integer between a and b if a < b,
@@ -178,6 +229,23 @@ null]]
 [while [> n 0]:
 [set result [+ (digits:[% n b]) result]]
 [set n [// n b]]]
+result]]]
+
+[def base10 [n b]:
+;; convert n from base b to base 10
+[? [or [< b 2] [> b 36]]: [echo "*** invalid base (2-36)"];
+[set n [tostr n]]
+[? [= n "0"]: 0;
+[set digits (
+"0" "1" "2" "3" "4" "5" "6" "7" "8" "9"
+"A" "B" "C" "D" "E" "F" "G" "H" "I" "J"
+"K" "L" "M" "N" "O" "P" "Q" "R" "S" "T"
+"U" "V" "W" "X" "Y" "Z"
+)]
+[set result 0]
+[for i 0 [1- [len n]]:
+[set result [* result b]]
+[set result [+ result [index digits (n:i)]]]]
 result]]]
 
 [def cls []:
@@ -206,10 +274,20 @@ result]]]
 [echo "\x1b[2K"]]
 
 [def hidecursor []:
+;; hide cursor
 [echo "\x1b[?25l"]]
 
 [def showcursor []:
+;; show cursor
 [echo "\x1b[?25h"]]
+
+[def savecursor []:
+;; save cursor position
+[echo "\x1b[s"]]
+
+[def restorecursor []:
+;; restore previously saved cursor position
+[echo "\x1b[u"]]
 
 [def scrh []:
 ;; screen height
