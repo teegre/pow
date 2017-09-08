@@ -8,14 +8,16 @@ from exceptions import *
 # Reserved words.
 reserved = {
         'bool'    : 'TYPE_BOOL',
-        'number'  : 'TYPE_NUM',
+        'int'     : 'TYPE_INT',
+        'real'    : 'TYPE_REAL',
+        'frac'    : 'TYPE_FRAC',
         'string'  : 'TYPE_STR',
         'list'    : 'TYPE_LIST',
         'echo'    : 'ECHO',     #OK print function
         'read'    : 'READ',     #   user input
         'expect'  : 'EXPECT',   #   check type
         'set'     : 'SET',      #OK variable assignation
-        'setg'    : 'SETG',     #   global variable assignation
+        'setg'    : 'SETG',     #   global variable assignment
         'del'     : 'DEL',      #OK variable / function deletion
         'for'     : 'FOR',      #OK for loop
         'while'   : 'WHILE',    #OK while statement
@@ -34,26 +36,29 @@ reserved = {
         'tail'    : 'TAIL',     #OK all elements after the first one
         'push'    : 'PUSH',     #OK add item(s) to a list
         'pop'     : 'POP',      #OK remove an item from a list
+        'clear'   : 'CLEAR',    #OK clear a list
         'map'     : 'MAP',      #
         'filter'  : 'FILTER',   #
         'type'    : 'TYPE',     #
-        'tostr'   : 'TOSTR',    #
-        'tonum'   : 'TONUM',    #
+        'tostr'   : 'TOSTR',    #   convert a number to a string
+        'tonum'   : 'TONUM',    #   convert a string to a number
+        'tofrac'  : 'TOFRAC',   #   convert a string to a fraction
+        'cal'     : 'CAL',      #   evaluate fraction
         'uses'    : 'USES',     #   module import
         'char'    : 'CHAR',     #
         'ord'     : 'ORD',      #
         'getcur'  : 'GETCUR',   #   cursor position
         'scrsize' : 'SCRSIZE',  #   screen size
         'time'    : 'TIME',    #OK
-        'pause'   : 'PAUSE',   #OK pause program execution
+        'pause'   : 'PAUSE',   #OK  pause program execution
 }
 
 # List of token names.
 tokens = [
-            'NULL', 'NUMBER', 'BOOL', 'STRING',
+            'NULL', 'INT', 'REAL', 'FRAC', 'BOOL', 'STRING',
             'EQ', 'NE', 'GT', 'GE', 'LT', 'LE',
             'PLUS', 'MINUS', 'MUL', 'DIV', 'IDIV', 'MOD', 'POW', 'POW2',
-            'INC', 'DEC', 'PLUSONE', 'MINUSONE',
+            'LSHIFT', 'RSHIFT', 'INC', 'DEC', 'PLUSONE', 'MINUSONE',
             'LPAREN', 'RPAREN', 'LBRACKET', 'RBRACKET', 'AT', 'QUESTION',
             'COLUMN', 'SEMI', 'IS',
             'ID',
@@ -69,6 +74,8 @@ t_EQ       = '='
 t_NE       = '!='
 t_GE       = '>='
 t_LE       = '<='
+t_LSHIFT   = '<<'
+t_RSHIFT   = '>>'
 t_GT       = '>'
 t_LT       = '<'
 t_MOD      = '%'
@@ -106,12 +113,14 @@ def t_NULL(t):
     t.value = Null()
     return t
 
-def t_NUMBER(t):
-    r'\d*\.?\d+'
-    try: t.value = int(t.value)
-    except:
-        try: t.value = float(t.value)
-        except: pass
+def t_REAL(t):
+    r'\d+\.\d+'
+    t.value = float(t.value)
+    return t
+
+def t_INT(t):
+    r'\d+'
+    t.value = int(t.value)
     return t
 
 def t_STRING(t):

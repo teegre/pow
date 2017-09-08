@@ -22,6 +22,8 @@ class Base:
         if self.powtype() == 'base':
             value = self.eval()._value
         else: value = self._value
+        if isinstance(value, Fraction):
+            return value
         try: return int(value)
         except:
             try: return float(value)
@@ -35,7 +37,6 @@ class Base:
         return self._type
 
 class Number(Base):
-    _type = 'number'
     def __init__(self, value):
         self._value = value
     def __repr__(self):
@@ -44,6 +45,173 @@ class Number(Base):
         return str(self._value)
     def eval(self):
         return self._value
+
+class Real(Number):
+    _type = 'real'
+
+class Int(Number):
+    _type = 'int'
+
+class Fraction(Base):
+    _type = 'frac'
+    def __init__(self, n, d=Int(1)):
+        self.n = n
+        self.d = d
+        self._value = self
+    def __repr__(self):
+        return f'{self.n}/{self.d}'
+    def __add__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if b == d:
+            return Fraction(ttype(a + c), ttype(b)).reduce()
+        else:
+            return Fraction(ttype((a * d) + (c * b)), ttype(b * d)).reduce()
+    def __sub__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if b == d:
+            return Fraction(ttype(a - c), ttype(b)).reduce()
+        else:
+            return Fraction(ttype((a * d) - (c * b)), ttype(b * d)).reduce()
+    def __mul__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        return Fraction(ttype(a * c), ttype(b * d)).reduce()
+    def __truediv__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        return Fraction(ttype(a * d), ttype(b * c)).reduce()
+    def __floordiv__(self, other):
+        return self.__truediv__(other)
+    def __radd__(self, other):
+        return self.__add__(other)
+    def __rsub__(self, other):
+        return self.__sub__(other)
+    def __rmul__(self, other):
+        return self.__mul__(other)
+    def __rtruediv__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        return other.__truediv__(self)
+    def __rfloordiv__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        return other.__truediv__(self)
+    def __pow__(self, value):
+        a = self.n.eval()
+        b = self.d.eval()
+        return Fraction(ttype(pow(a, value)), ttype(pow(b, value))).reduce()
+    def __eq__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if a / b == c / d: return True
+        return False
+    def __lt__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if a / b < c / d: return True
+        return False
+    def __gt__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if a / b > c / d: return True
+        return False
+    def __le__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if a / b <= c / d: return True
+        return False
+    def __ge__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if a / b >= c / d: return True
+        return False
+    def __ne__(self, other):
+        if not isinstance(other, Fraction):
+            other = Fraction(ttype(other))
+        a = self.n.eval()
+        b = self.d.eval()
+        c = other.n.eval()
+        d = other.d.eval()
+        if a / b != c / d: return True
+        return False
+    def gcd(self):
+        a = self.n.eval()
+        b = self.d.eval()
+        r = 1
+        while r:
+            r = a % b
+            if r == 0: return ttype(b)
+            a = b
+            b = r
+        return ttype(r)
+    def reduce(self):
+        cd = self.gcd()
+        a = self.n.eval() // cd.eval()
+        b = self.d.eval() // cd.eval()
+        if b == 1: return a
+        return Fraction(ttype(a), ttype(b))
+    def tonum(self):
+        a = self.n.eval()
+        b = self.d.eval()
+        return a / b
+    def cal(self):
+        a = self.n.eval()
+        b = self.d.eval()
+        return Fraction(ttype(a), ttype(b)).reduce()
+    @classmethod
+    def tofrac(cls, value):
+        ab = value.eval().split('/')
+        try:
+            a = int(ab[0])
+        except ValueError:
+            if ab[0] == '/': a = 1
+            else: raise PowRuntimeError('*** invalid fraction')
+        try:
+            b = int(ab[1])
+            if b == 0: raise PowRuntimeError('*** invalid fraction')
+        except ValueError:
+            raise PowRuntimeError('*** invalid fraction')
+        return Fraction(ttype(a), ttype(b))
+    def eval(self):
+        return self
 
 class String(Base):
     _type = 'string'
@@ -111,9 +279,10 @@ class Null(Base):
         return self
 
 def listrepr(s):
+    if isnull(s.head()): return Null()
     tail = ''
     if not isnull(s.tail()):
-        tail = ', ' + listrepr(s.tail())
+        tail = ' ' + listrepr(s.tail())
     return f'{repr(s.head())}{tail}'
 
 def addlist(s, t):
@@ -220,6 +389,7 @@ class List(Base):
     def clear(self):
         self.__head = Null()
         self.__tail = Null()
+        return self
     def isempty(self):
         return isnull(self.__head)
     def copy(self):
@@ -259,8 +429,10 @@ def is_(value):
 def ttype(value):
     if isinstance(value, bool):
         return Bool(value)
-    if isinstance(value, int) or isinstance(value, float):
-        return Number(value)
+    if isinstance(value, int):
+        return Int(value)
+    if isinstance(value, float):
+        return Real(value)
     if isinstance(value, str):
         return String(value)
     if value is None:

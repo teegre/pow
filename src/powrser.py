@@ -1,3 +1,6 @@
+# powrser.py: [PowerText] language parser.
+# _*_ coding:utf8 _*_
+
 import ply.yacc as yacc
 from powlexer import tokens
 import powast
@@ -5,6 +8,7 @@ from exceptions import *
 
 precedence = (
         ('right', 'UMINUS'),
+        ('left', 'FDIV'),
 )
 
 def p_statements(p):
@@ -47,7 +51,9 @@ def p_id_element(p):
 def p_expr(p):
     """expr : LBRACKET command RBRACKET
             | STRING
-            | NUMBER
+            | REAL
+            | INT
+            | FRAC
             | BOOL
             | NULL
             | pow_type
@@ -64,9 +70,13 @@ def p_expr(p):
     else:
         p[0] = powast.ttype(p[1])
 
+        p[0] = powast.ttype(p[1])
+
 def p_pow_type(p):
     """pow_type : TYPE_BOOL
-                | TYPE_NUM
+                | TYPE_REAL
+                | TYPE_INT
+                | TYPE_FRAC
                 | TYPE_STR
                 | TYPE_LIST"""
     p[0] = p[1]
@@ -117,13 +127,17 @@ def p_for_statement(p):
     """for_statement : LBRACKET FOR ID expr expr COLUMN statements RBRACKET
                      | LBRACKET FOR ID expr expr expr COLUMN statements RBRACKET"""
     if len(p) == 9:
-        p[0] = powast.For(p[3], p[4], p[5], powast.Number(1), p[7])
+        p[0] = powast.For(p[3], p[4], p[5], powast.Int(1), p[7])
     else:
         p[0] = powast.For(p[3], p[4], p[5], p[6], p[8])
 
 def p_expr_uminus(p):
     """expr : MINUS expr %prec UMINUS"""
     p[0] = powast.Negative(p[2])
+
+def p_frac_expr(p):
+    """expr : expr DIV expr %prec FDIV"""
+    p[0] = powast.Fraction(p[1], p[3])
 
 def p_is_command(p):
     """command : IS expr"""
@@ -150,19 +164,21 @@ def p_command_expect(p):
     p[0] = powast.Expect(p[2], p[3])
 
 def p_command_binop(p):
-    """command : PLUS  expr expr
-               | MINUS expr expr
-               | MUL   expr expr
-               | DIV   expr expr
-               | IDIV  expr expr
-               | MOD   expr expr
-               | POW   expr expr
-               | EQ    expr expr
-               | NE    expr expr
-               | LT    expr expr
-               | LE    expr expr
-               | GT    expr expr
-               | GE    expr expr"""
+    """command : PLUS   expr expr
+               | MINUS  expr expr
+               | MUL    expr expr
+               | DIV    expr expr
+               | IDIV   expr expr
+               | MOD    expr expr
+               | POW    expr expr
+               | EQ     expr expr
+               | NE     expr expr
+               | LT     expr expr
+               | LE     expr expr
+               | GT     expr expr
+               | GE     expr expr
+               | LSHIFT expr expr
+               | RSHIFT expr expr"""
     p[0] = powast.BinOp(p[1], p[2], p[3])
 
 def p_command_plus_one(p):
@@ -218,6 +234,14 @@ def p_command_tonum(p):
     """command : TONUM expr"""
     p[0] = powast.ToNum(p[2])
 
+def p_command_tofrac(p):
+    """command : TOFRAC expr"""
+    p[0] = powast.ToFrac(p[2])
+
+def p_commad_val(p):
+    """command : CAL expr"""
+    p[0] = powast.Cal(p[2])
+
 def p_command_char(p):
     """command : CHAR expr"""
     p[0] = powast.Char(p[2])
@@ -243,8 +267,12 @@ def p_command_setg(p):
         p[0] = powast.Set(p[3], p[7], p[5], isglobal=True)
 
 def p_command_push(p):
-    """command : PUSH ID sequence"""
-    p[0] = powast.Push(powast.Variable(p[2]), p[3])
+    """command : PUSH ID sequence
+               | PUSH list_access sequence"""
+    if not isinstance(p[2], powast.Get):
+        p[0] = powast.Push(powast.Variable(p[2]), p[3])
+    else:
+        p[0] = powast.Push(p[2], p[3])
 
 def p_command_pop(p):
     """command : POP ID
@@ -253,6 +281,14 @@ def p_command_pop(p):
         p[0] = powast.Pop(powast.Variable(p[2]))
     else:
         p[0] = powast.Pop(powast.Variable(p[2]), p[3])
+
+def p_command_clear(p):
+    """command : CLEAR ID
+               | CLEAR list_access"""
+    if not isinstance(p[2], powast.Get):
+        p[0] = powast.Clear(powast.Variable(p[2]))
+    else:
+        p[0] = powast.Clear(p[2])
 
 def p_command_def(p):
     """command : DEF ID LBRACKET RBRACKET COLUMN statements
