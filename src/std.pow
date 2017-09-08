@@ -71,7 +71,7 @@ L]
 [? [= a [head b]]: true;
 [in a [tail b]]]];
 [? [= [type b] string]:
-[def string-tail [s]: [set T ""] [for i 0 [1- [len s]]: [? i: [set T [+ T (s:i)]]]] T]
+[def str-tail [s]: [set T ""] [for i 0 [1- [len s]]: [? i: [set T [+ T (s:i)]]]] T]
 [? [not b]: false;
 [? [= a (b:0)]: true;
 [in a [str-tail b]]]]]]] 
