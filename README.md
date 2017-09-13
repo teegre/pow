@@ -301,14 +301,51 @@ my-hashtable2
 
 ## 7. Fractions
 
-Any expression can be used for numerator or denominator, such as variables or functions.
-Variables don't need to be instanciated to any number when using a fraction.
+Any expression can be used for numerator and denominator
 
-Example:
+`1/2`
+
+`-5/12`
 
 ```
-[set f x/[** x]]
-[for x 1 10:
-  [echo "x=" x "f(x)=" [cal f]]]
+[+ 1/2 3/4]
+
+5/4
 ```
 
+Example with variables:
+
+```
+[set f a/b]
+
+f
+
+a/b
+
+[set a 3]
+[set b 2]
+
+f
+
+a/b
+
+[cal f]
+
+3/2
+
+[tonum f]
+
+1.5
+```
+
+Example with an expression:
+```
+[set f 1/[** x]]
+[for x 2 10 2: [echo [cal f] "\n"]]
+
+1/4
+1/16
+1/36
+1/64
+1/100
+```

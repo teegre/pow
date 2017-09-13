@@ -71,7 +71,7 @@ L]
 [? [= a [head b]]: true;
 [in a [tail b]]]];
 [? [= [type b] string]:
-[def string-tail [s]: [set T ""] [for i 0 [1- [len s]]: [? i: [set T [+ T (s:i)]]]] T]
+[def str-tail [s]: [set T ""] [for i 0 [1- [len s]]: [? i: [set T [+ T (s:i)]]]] T]
 [? [not b]: false;
 [? [= a (b:0)]: true;
 [in a [str-tail b]]]]]]] 
@@ -79,6 +79,10 @@ L]
 [def abs [x]:
 ;; absolute value
 [? [>= x 0]: x; -x]]
+
+[def inv [x]:
+;; inverse of x
+[/ 1 x]]
 
 [def range [a b]:
 ;; return a list of numbers

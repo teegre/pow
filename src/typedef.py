@@ -182,12 +182,26 @@ class Fraction(Base):
             a = b
             b = r
         return ttype(r)
-    def reduce(self):
-        cd = self.gcd()
+    def lcm(self):
+        a = self.n.eval()
+        b = self.d.eval()
+        cd = self.gcd().eval()
+        return ttype((a * b) / cd)
+    def reduce(self, smaller=False):
+        if smaller: cd = self.lcm()
+        else: cd = self.gcd()
         a = self.n.eval() // cd.eval()
         b = self.d.eval() // cd.eval()
         if b == 1: return a
         return Fraction(ttype(a), ttype(b))
+    def crop(self, decimals):
+        decimals = decimals.eval()
+        n = self.n.eval() / self.d.eval()
+        if type(decimals) != int and decimals > len(str(n)):
+            raise PowRuntimeError('*** crop: invalid number of decimals')
+        sn = str(n).split('.')
+        ns = sn[0] + '.' + sn[1][0:decimals]
+        return Real(float(ns))
     def tonum(self):
         a = self.n.eval()
         b = self.d.eval()
@@ -198,18 +212,43 @@ class Fraction(Base):
         return Fraction(ttype(a), ttype(b)).reduce()
     @classmethod
     def tofrac(cls, value):
-        ab = value.eval().split('/')
-        try:
-            a = int(ab[0])
-        except ValueError:
-            if ab[0] == '/': a = 1
-            else: raise PowRuntimeError('*** invalid fraction')
-        try:
-            b = int(ab[1])
-            if b == 0: raise PowRuntimeError('*** invalid fraction')
-        except ValueError:
-            raise PowRuntimeError('*** invalid fraction')
-        return Fraction(ttype(a), ttype(b))
+        if isinstance(value, String):
+            ab = value.eval().split('/')
+            try:
+                a = int(ab[0])
+            except ValueError:
+                if ab[0] == '/': a = 1
+                else: raise PowRuntimeError('*** invalid fraction')
+            try:
+                b = int(ab[1])
+                if b == 0: raise PowRuntimeError('*** invalid fraction')
+            except ValueError:
+                raise PowRuntimeError('*** invalid fraction')
+            return Fraction(ttype(a), ttype(b))
+        else:
+            import math
+            x = value.eval()
+            sign = 1 if x > 0 else -1
+            g = abs(x)
+            a = 0
+            b = 1
+            c = 1
+            d = 0
+            i = 0
+            try: e = 1 / pow(10, len(str(x).split('.')[1]))
+            except: e = 1.0
+            while i < 1e6:
+                s = math.floor(g)
+                num = a + s * c
+                den = b + s * d
+                a = c
+                b = d
+                c = num
+                d = den
+                if g - s != 0: g = 1 / (g - s)
+                if e > abs(sign * num / den - x):
+                    return Fraction(ttype(sign * num), ttype(den))
+            return ttype(0)
     def eval(self):
         return self
 
