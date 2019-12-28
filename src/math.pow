@@ -1,0 +1,192 @@
+;; MATH library
+
+[set PI  3.141592653589793]
+[set PHI 1.6180339887498947]
+[set E 2.718281828459045]
+
+[set _ANGLES_
+( 0.7853981633974483 0.4636476090008061 0.24497866312686414 0.12435499454676144 0.06241880999595735
+  0.0312398334302687 0.0156237286204768 0.00781234106010111 0.00390623013196697 0.00195312251647882
+  0.0009765621895593 0.0004882812111949 0.00024414062014936 0.00012207031189367 0.00006103515617421
+  0.0000305175781155 0.0000152587890613 0.00000762939453110 0.00000381469726561 0.00000190734863281
+  0.0000009536743164 0.0000004768371582 0.00000023841857910 0.00000011920928955 0.00000005960464478
+  0.0000000298023224 0.0000000149011612 0.00000000745058060 0.00000000372529030 0.00000000186264515 )]
+
+
+[def _COSSIN_ [beta]:
+[set K 0.60725293500888125617] 
+[set theta [angle-shift beta -PI]]
+[? [< theta [* -0.5 PI]]:
+  [set theta [+ theta PI]]
+  [set sign-factor -1];
+[? [< [* 0.5 PI] theta]:
+  [set theta [- theta PI]]
+  [set sign-factor -1];
+[set sign-factor 1]]]
+[set c 1]
+[set s 0]
+[set poweroftwo 1]
+[for j 0 29:
+  [? [< theta 0]: [set sigma -1]; [set sigma 1]]
+  [set factor [* sigma poweroftwo]]
+  [set c2 [- c [* factor s]]]
+  [set s2 [+ [* factor c] s]]
+  [set c c2]
+  [set s s2]
+  [? [> j [1- [len _ANGLES_]]]: [set angle [/ angle 2]]; [set angle (_ANGLES_:j)]]
+  [set theta [- theta [* sigma angle]]]
+  [set poweroftwo [/ poweroftwo 2]]]
+[set c [* c K]]
+[set s [* s K]]
+([* c sign-factor] [* s sign-factor])]
+
+[def cos [x]: ([_COSSIN_ x]:0)]
+[def sin [x]: ([_COSSIN_ x]:1)]
+
+[def tan [beta]:
+[set theta [angle-shift beta -PI]]
+[? [< theta [* -0.5 PI]]: [set theta [+ theta PI]];
+[? [< [* 0.5 PI] theta]: [set theta [- theta PI]]]]
+[set c 1]
+[set s 0]
+[set poweroftwo 1]
+[for j 0 50:
+  [? [< theta 0]: [set sigma -1]; [set sigma 1]]
+  [set factor [* sigma poweroftwo]]
+  [set c2 [- c [* factor s]]]
+  [set s2 [+ [* factor c] s]]
+  [set c c2]
+  [set s s2]
+  [? [> j [1- [len _ANGLES_]]]: [set angle [/ angle 2]]; [set angle (_ANGLES_:j)]]
+  [set theta [- theta [* sigma angle]]]
+  [set poweroftwo [/ poweroftwo 2]]]
+[/ s c]]
+
+[def acos [t]:
+[? [> t 1]: [echo "*** acos: fatal error"];
+[? [= t 1]: 0.0;
+[set theta 0]
+[set x1 1]
+[set y1 0]
+[set poweroftwo 1]
+[for j 0 50:
+  [? [< y1 0]: [set sign-z2 -1]; [set sign-z2 1]]
+  [? [<= t x1]: [set sigma sign-z2]; [set sigma -sign-z2]]
+  [? [> j [1- [len _ANGLES_]]]: [set angle [/ angle 2]]; [set angle (_ANGLES_:j)]]
+  [for i 1 2:
+    [set x2 [- x1 [* sigma [* poweroftwo y1]]]]
+    [set y2 [+ [* sigma [* poweroftwo x1]] y1]]
+    [set x1 x2]
+    [set y1 y2]]
+  [set theta [+ theta [* 2 [* sigma angle]]]]
+  [set t [+ t [* t [** poweroftwo]]]]
+  [set poweroftwo [/ poweroftwo 2]]]
+theta]]]
+
+[def asin [t]:
+[? [> [abs t] 1]: [echo "*** asin: fatal error"];
+[set theta 0]
+[set x1 1]
+[set y1 0]
+[set poweroftwo 1]
+[for j 0 50:
+  [? [< x1 0]: [set sign-z1 -1]; [set sign-z1 1]]
+  [? [>= t y1]: [set sigma sign-z1]; [set sigma -sign-z1]]
+  [? [> j [1- [len _ANGLES_]]]: [set angle [/ angle 2]]; [set angle (_ANGLES_:j)]]
+  [for i 1 2:
+    [set x2 [- x1 [* sigma [* poweroftwo y1]]]]
+    [set y2 [+ [* sigma [* poweroftwo x1]] y1]]
+    [set x1 x2]
+    [set y1 y2]]
+  [set theta [+ theta [* 2 [* sigma angle]]]]
+  [set t [+ t [* t [** poweroftwo]]]]
+  [set poweroftwo [/ poweroftwo 2]]]
+theta]]
+
+[def atan [t]:
+null]
+
+[def sqrt [x]:
+[set poweroftwo 1]
+[set y 0]
+[? [< x 0]: [echo "*** sqrt: fatal error"];
+[? [= x 0]: 0;
+[? [= x 1]: 1;
+[? [< x 1]:
+  [while [<= x [** poweroftwo]]:
+    [set poweroftwo [/ poweroftwo 2]]]
+  [set y poweroftwo];
+[? [< 1 x]:
+  [while [<= [** poweroftwo] x]:
+    [set poweroftwo [* poweroftwo 2]]]
+  [set y [/ poweroftwo 2]]]]
+[for i 1 150:
+  [set poweroftwo [/ poweroftwo 2]]
+  [? [<= [** [+ y poweroftwo]] x]: [set y [+ y poweroftwo]]]]
+[+ y 0.0000000000000004440892098500626]]]]]
+
+[set A 
+( 1.648721270700128  1.284025416687742  1.133148453066826  1.064494458917859  1.031743407499103
+  1.015747708586686  1.007843097206488  1.003913889338348  1.001955033591003  1.000977039492417
+  1.000488400478694  1.000244170429748  1.000122077763384  1.000061037018933  1.000030518043791
+  1.0000152589054785 1.0000076294236351 1.0000038147045416 1.0000019073504518 1.0000009536747712 
+  1.0000004768372719 1.0000002384186075 1.0000001192092967 1.0000000596046466 1.0000000298023228 )]
+
+[def log [x]:
+[? [<= x 0]: [echo "*** log: fatal error\n"];
+[set ai 0]
+[set k 0]
+[while [<= E x]:
+  [++ k]
+  [set x [/ x E]]]
+[while [< x 1]:
+  [-- k]
+  [set x [* x E]]]
+[set w ()]
+[for i 0 50:
+  [push w 0]
+  [? [< i [len A]]: [set ai (A:i)]; [set ai [+ 1 [/ [- ai 1] 2]]]]
+  [? [< ai x]:
+    [set (w:i) 1]
+    [set x [/ x ai]]]]
+[-- x]
+[set x [* x [* [- 1 [/ x 2]] [* [+ 1 [/ x 3]] [- 1 [/ x 4]]]]]] 
+[set poweroftwo 0.5]
+[for i 0 50:
+  [set x [+ x [* (w:i) poweroftwo]]]
+  [set poweroftwo [/ poweroftwo 2]]]
+[set fx [+ x k]]
+fx]]
+
+[def exp [x]:
+[set xint [// x 1]]
+[set poweroftwo 0.5]
+[set z [- x xint]]
+[set ai 0]
+[set w ()]
+[for i 0 50:
+  [push w 0]
+  [? [< poweroftwo z]:
+    [set (w:i) 1]
+    [set z [- z poweroftwo]]]
+  [set poweroftwo [/ poweroftwo 2]]]
+[set fx 1]
+[for i 0 50:
+  [? [< i [len A]]: [set ai (A:i)]; [set ai [+ 1 [/ [- ai 1] 2]]]]
+  [? [< 0 (w:i)]: [set fx [* fx ai]]]]
+[set fx [* fx [* [+ 1 z] [* [+ 1 [/ z 2]] [* [+ 1 [/ z 3]] [+ 1 [/ z 4]]]]]]]
+[? [< xint 0]:
+  [for i 1 -xint: [set fx [/ fx E]]];
+[? [> xint 0]: [for i 1 xint: [set fx [* fx E]]]]]
+fx]
+
+[def angle-shift [alpha beta]:
+[? [< alpha beta]:
+[set gamma [+ [- beta [% [- beta alpha] [* 2 PI]]] [* 2 PI]]];
+[set gamma [+ beta [% [- alpha beta] [* 2 PI]]]]]
+gamma]
+
+[def rad-deg [x]: [/ x [/ 180 PI]]]
+[def deg-rad [x]: [* x [/ PI 180]]]
+[def rad-grad [x]: [* x [/ 200 PI]]]
+[def grad-rad [x]: [* x [/ PI 200]]]
