@@ -2,8 +2,6 @@
 
 [PowerText] is a LISP-like functionnal programming language written in Python 3.6.
 
-**/!\ Work in progress**
-
 ## 1. Syntax
 
 > Similar to LISP, but parentheses have been replaced by square brackets. So for adding 2 and 2, just type: `[+ 2 2]`  which should return 4.
